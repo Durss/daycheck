@@ -1,0 +1,95 @@
+input, textarea, select {
+	color: @mainColor_dark;
+	border-radius: 20px;
+	border: 1px solid @mainColor_normal;
+	background-color: @mainColor_dark_extralight;
+	font-size: 24px;
+	font-family: "Futura";
+	padding: 10px;
+	box-sizing: border-box;
+	&::placeholder {
+		font-style: italic;
+		color: fade(#000, 25%);
+	}
+	&:-webkit-autofill,
+	&:-webkit-autofill:hover, 
+	&:-webkit-autofill:active, 
+	&:-webkit-autofill:valid, 
+	&:-webkit-autofill:focus {
+		color: #fff !important;
+		background-color: fade(#fff, 50%) !important;
+		box-shadow: none !important;
+	}
+
+	&.dark {
+		color: @mainColor_normal;
+		background-color: fade(@mainColor_light_light, 50%);
+	}
+	
+	&::-webkit-scrollbar {
+		display: none;
+	}
+
+	&:disabled {
+		color: fade(#fff, 50%);
+
+		&.dark {
+			color: fade(@mainColor_normal, 25%);
+		}
+	}
+}
+
+textarea {
+	min-height: 65px;
+}
+
+input[type="submit"],
+button,
+.button {
+	cursor: pointer;
+	border: none;
+	border-radius: 20px;
+	padding: 10px 20px;
+	font-size: 16px;
+	color: #fff;
+	font-weight: bold;
+	text-transform: uppercase;
+	font-family: "CircularPro";
+	background-color: @mainColor_normal;
+	transition: color .25s, background-color .25s;
+	padding-top: 12px;
+	box-sizing: border-box;
+	text-align: center;
+
+	&:hover {
+		color: @mainColor_dark;
+		background-color: @mainColor_normal_light;
+	}
+
+	&.dark {
+		color: #fff;
+		background-color: @mainColor_dark;
+
+		&:hover {
+			background-color: @mainColor_dark_light;
+		}
+	}
+
+	&.disabled {
+		pointer-events: none;
+		color: fade(@mainColor_dark, 25%);
+		&.dark {
+			color: fade(#000, 25%);
+			background-color: fade(@mainColor_dark_extralight, 50%);
+		}
+	}
+}
+
+input[type="cancel"],
+button[type="cancel"] {
+	background-color: @mainColor_light;
+
+	&:hover {
+		background-color: @mainColor_light_light;
+	}
+}
