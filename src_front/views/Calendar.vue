@@ -1,6 +1,8 @@
 <template>
 	<div class="calendar frame" v-if="data">
-		<h1>{{this.data.name}}</h1>
+		<div class="head">
+			<h1>{{this.data.name}} <i>({{countDone}}/{{data.days}})</i> </h1>
+		</div>
 		<Button :icon="require('@/assets/icons/back.svg')" class="back" :to="{name:'home'}" />
 		<Button :icon="require('@/assets/icons/qrcode.svg')" class="qrcode" @click="showQRCode = !showQRCode" />
 		<QRCodeOverlay v-if="showQRCode" class="qrcodeOverlay" />
@@ -42,6 +44,16 @@ export default class Calendar extends Vue {
 	public data:any = null;
 	public showQRCode:boolean = false;
 
+	public get countDone():number {
+		if(!this.data.daysDone) return 0;
+		let count = 0;
+		for (let i = 0; i < this.data.daysDone.length; i++) {
+			const element = this.data.daysDone[i];
+			if(element === true) count ++;
+		}
+		return count;
+	}
+
 	public mounted():void {
 		this.data = this.$store.state.data;
 		this.$nextTick().then(_=> {
@@ -62,6 +74,7 @@ export default class Calendar extends Vue {
 	
 	public onCheckChange(index:number, value:boolean):void {
 		this.$store.dispatch("checkDate", {index, value});
+		this.data = this.$store.state.data;
 	}
 
 }
@@ -71,6 +84,11 @@ export default class Calendar extends Vue {
 @import (reference) '../less/_includes.less';
 .calendar{
 	width: 640px;
+
+	.head {
+		padding-left: 50px;
+		padding-right: 50px;
+	}
 
 	.qrcode, .back {
 		position: absolute;
@@ -95,15 +113,15 @@ export default class Calendar extends Vue {
 	}
 
 	.content {
-		position: relative;
 		width: 100%;
+		position: relative;
 		box-sizing: border-box;
 
 		.description {
 			margin-bottom: 15px;
-			font-style: italic;
 			text-align: center;
 			font-family: "FuturaLight";
+			white-space: pre-wrap;
 		}
 
 		.list {

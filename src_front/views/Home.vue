@@ -1,6 +1,8 @@
 <template>
 	<div :class="classes" @leave="test()">
-		<h1>Create a calendar</h1>
+		<div class="head">
+			<h1>Create a calendar</h1>
+		</div>
 		<div class="content">
 			<div class="infos">You want to push yourself doing a task every day ? Create a calendar and track your progress everyday.</div>
 			<form @submit.prevent="onSubmit()">

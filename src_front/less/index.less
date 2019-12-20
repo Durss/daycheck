@@ -17,18 +17,6 @@ body, html {
 	font-family: "Futura";
 }
 
-h1 {
-	font-weight: bold;
-	text-align: center;
-	font-size: 30px;
-	margin-bottom: 20px;
-	font-family: "CircularPro";
-	background-color: @mainColor_normal;
-	padding: 10px 20px;
-	border-radius: 10px;
-	color: #fff;
-}
-
 a {
 	text-decoration: none;
 }
@@ -41,11 +29,31 @@ a {
 	display: block;
 	position: relative;
 	transition: all @duration;
-	h1 {
+	.head {
+		overflow: hidden;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-color: @mainColor_normal;
+		border-radius: 10px;
 		border-bottom-left-radius: 0;
 		border-bottom-right-radius: 0;
-		margin-bottom: 0px;
-		overflow: hidden;
+
+		h1 {
+			font-weight: bold;
+			text-align: center;
+			font-size: 30px;
+			font-family: "CircularPro";
+			padding: 10px 20px;
+			color: #fff;
+			width: 100%;
+		}
+
+		i {
+			font-size: 14px;
+			font-family: "FuturaLight";
+			font-style: italic;
+		}
 	}
 
 	.content {
