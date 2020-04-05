@@ -20,6 +20,7 @@ export default new Vuex.Store({
 			description:null,
 			days:null,
 			daysDone:null,
+			start:null,
 		},
 		confirm:{
 		  title:null,
@@ -47,17 +48,19 @@ export default new Vuex.Store({
 			state.data.daysDone = [];
 			state.data.days = payload.days;
 			state.data.name = payload.name;
+			state.data.start = new Date();
 			state.data.description = payload.description;
 			let dataurl = Utils.encodeForURI(payload);
-			router.push({name:"calendar", params:{title:Utils.slugify(state.data.name), dataurl:dataurl}});
+			router.push({name:"calendar", params:{name:Utils.slugify(state.data.name), dataurl:dataurl}});
 		},
 
 		checkDate(state, payload) {
 			if(!state.data.daysDone) state.data.daysDone = [];
-			let v = payload.value? state.data.daysDone[payload.index]+1 : 0
-			Vue.set(state.data.daysDone, payload.index, v);
+			if(!state.data.daysDone[payload.index]) state.data.daysDone[payload.index] = 0;
+			let v = payload.value? state.data.daysDone[payload.index]+1 : 0;
+			let cul = Vue.set(state.data.daysDone, payload.index, v);
 			let dataurl = Utils.encodeForURI(state.data);
-			router.push({name:"calendar", params:{title:Utils.slugify(state.data.name), dataurl:dataurl}});
+			router.push({name:"calendar", params:{name:Utils.slugify(state.data.name), dataurl:dataurl}});
 		}
 
 	},
@@ -82,7 +85,7 @@ export default new Vuex.Store({
 					if(needsUpdate) {
 						//Update URI with new data
 						let dataurl = Utils.encodeForURI(state.data);
-						router.push({name:"calendar", params:{title:Utils.slugify(state.data.name), dataurl:dataurl}});
+						router.push({name:"calendar", params:{name:Utils.slugify(state.data.name), dataurl:dataurl}});
 					}
 					console.log(data);
 				}catch(e) {
