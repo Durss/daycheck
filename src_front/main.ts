@@ -10,7 +10,8 @@ router.beforeEach((to, from, next) => {
 	if (!store.state.initComplete) {
 		store.dispatch("startApp", {router, to}).then(_=> {
 			next();
-		}).catch(_=> {
+		}).catch((e)=> {
+			console.log(e);
 			router.push({name:"home"});
 		});
 	}else{

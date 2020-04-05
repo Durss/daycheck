@@ -1,5 +1,6 @@
 import store from '@/store';
 import * as LZString from "lz-string";
+import Config from './Config';
 
 /**
  * Created by Durss
@@ -432,7 +433,7 @@ export default class Utils {
 
 	public static encodeForURI(data:any):string {
 		let clone = JSON.parse(JSON.stringify(data));
-		clone.v = 1;
+		clone.v = Config.DATA_VERSION;
 		return LZString.compressToEncodedURIComponent(JSON.stringify(clone));
 	}
 

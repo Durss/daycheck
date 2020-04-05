@@ -3,7 +3,7 @@
 		<div class="head">
 			<h1>{{this.data.name}} <i>({{countDone}}/{{data.days}})</i> </h1>
 		</div>
-		<Button :icon="require('@/assets/icons/back.svg')" class="back" :to="{name:'home'}" />
+		<Button :icon="require('@/assets/icons/back.svg')" class="back" @click="clickBack()" />
 		<Button :icon="require('@/assets/icons/qrcode.svg')" class="qrcode" @click="showQRCode = !showQRCode" />
 		<QRCodeOverlay v-if="showQRCode" class="qrcodeOverlay" />
 		<div class="content" v-if="!showQRCode">
@@ -49,7 +49,7 @@ export default class Calendar extends Vue {
 		let count = 0;
 		for (let i = 0; i < this.data.daysDone.length; i++) {
 			const element = this.data.daysDone[i];
-			if(element === true) count ++;
+			if(element > 0) count ++;
 		}
 		return count;
 	}
@@ -75,6 +75,16 @@ export default class Calendar extends Vue {
 	public onCheckChange(index:number, value:boolean):void {
 		this.$store.dispatch("checkDate", {index, value});
 		this.data = this.$store.state.data;
+	}
+
+	public clickBack():void {
+		if(this.showQRCode) {
+			this.showQRCode = false;
+		}else{
+			Utils.confirm("Do you want to leave this calendar ?").then(_=> {
+				this.$router.push({name:'home'});
+			}).catch(error=>{});
+		}
 	}
 
 }
@@ -129,12 +139,6 @@ export default class Calendar extends Vue {
 			display: flex;
 			flex-direction: row;
 			flex-wrap: wrap;
-			.item {
-				width: 94px;
-				height: 94px;
-				padding: 3px;
-				background-color: #fff;
-			}
 		}
 	}
 }
