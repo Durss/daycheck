@@ -87,7 +87,6 @@ export default new Vuex.Store({
 						let dataurl = Utils.encodeForURI(state.data);
 						router.push({name:"calendar", params:{name:Utils.slugify(state.data.name), dataurl:dataurl}});
 					}
-					console.log(data);
 				}catch(e) {
 					console.log(e);
 					commit("alert", "Unable to parse calendar data :(");

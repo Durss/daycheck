@@ -26,6 +26,7 @@ export default class Checkable extends Vue {
 	public index:number;
 
 	public value:number = 0;
+	public timeoutRefresh:NodeJS.Timeout = null;
 	public startDate:Date = null;
 	public today:Date = null;
 
@@ -60,17 +61,27 @@ export default class Checkable extends Vue {
 		this.value = daysDone && daysDone[this.index]? daysDone[this.index] : 0;
 		this.startDate = new Date(this.$store.state.data.start);
 		this.startDate.setDate(this.startDate.getDate() + this.index);
-		this.today = new Date();
+		this.scheduleRefresh();
 	}
 
 	public beforeDestroy():void {
-		
+		clearTimeout(this.timeoutRefresh);
 	}
 
 	public onClick():void {
 		this.value = ++this.value;
 		if(this.value > 5) this.value = 0;
 		this.$emit("change", this.index, this.value);
+	}
+
+	private scheduleRefresh():void {
+		this.today = new Date();
+		let tomorrow = new Date();
+		tomorrow.setHours(tomorrow.getHours()+24);
+		tomorrow.setHours(0);
+		tomorrow.setMinutes(0);
+		tomorrow.setSeconds(0);
+		this.timeoutRefresh = setTimeout(this.scheduleRefresh,  tomorrow.getTime() - this.today.getTime() + 1000);//add 1sec for safety
 	}
 
 }
