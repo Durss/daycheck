@@ -1,3 +1,4 @@
+![Icon](https://github.com/Durss/daycheck/blob/master/public/favicon.png)
 # Day Check
 Simple app to track your progress on a task you want to achieve every day for a specific amount of days.  
 See it at :  
