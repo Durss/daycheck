@@ -7,6 +7,7 @@
 		leave-active-class="close">
 			<router-view :class="classes" ref="page" mode="out-in"></router-view>
 		</transition>
+		<CalendarList />
 		<ConfirmView />
 		<AlertView />
 		<Tooltip />
@@ -19,13 +20,15 @@ import Tooltip from './components/Tooltip.vue';
 import ConfirmView from './views/Confirm.vue';
 import AlertView from './views/AlertView.vue';
 import Button from './components/Button.vue';
+import CalendarList from './components/CalendarList.vue';
 
 @Component({
 	components:{
 		Button,
 		Tooltip,
 		AlertView,
-		ConfirmView
+		ConfirmView,
+		CalendarList,
 	}
 })
 export default class App extends Vue {

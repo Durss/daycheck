@@ -16,11 +16,15 @@
 
 <script lang="ts">
 import { Component, Inject, Model, Prop, Vue, Watch, Provide } from "vue-property-decorator";
+import CalendarData from '../vo/CalendarData';
 
 @Component({
 	components:{}
 })
 export default class Checkable extends Vue {
+
+	@Prop()
+	public data:CalendarData;
 
 	@Prop()
 	public index:number;
@@ -57,9 +61,9 @@ export default class Checkable extends Vue {
 	}
 
 	public beforeMount():void {
-		let daysDone = this.$store.state.data.daysDone
+		let daysDone = this.data.daysDone
 		this.value = daysDone && daysDone[this.index]? daysDone[this.index] : 0;
-		this.startDate = new Date(this.$store.state.data.start);
+		this.startDate = new Date(this.data.start);
 		this.startDate.setDate(this.startDate.getDate() + this.index);
 		this.scheduleRefresh();
 	}

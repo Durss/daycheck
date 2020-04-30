@@ -4,6 +4,8 @@ import DataMigrator from '@/utils/DataMigrator';
 import Vue from 'vue';
 import Vuex from 'vuex';
 import Utils from '../utils/Utils';
+import CalendarData from '@/vo/CalendarData';
+import { v4 as uuidv4 } from 'uuid';
 
 Vue.use(Vuex)
 
@@ -15,13 +17,8 @@ export default new Vuex.Store({
 		mobile: false,
 		tooltip: null,
 		alert: null,
-		data: {
-			name:null,
-			description:null,
-			days:null,
-			daysDone:null,
-			start:null,
-		},
+		calendars: null,
+		data: null,
 		confirm:{
 		  title:null,
 		  description:null,
@@ -40,27 +37,51 @@ export default new Vuex.Store({
 		
 		confirm(state, payload) { state.confirm = payload; },
 
-		setData(state, payload) { state.data = payload; },
+		setData(state, payload) {
+			let data = localStorage.getItem("calendars");
+			let list:CalendarData[] = [];
+			if(data) {
+				list = JSON.parse(data);
+			}
+			let found:boolean = false;
+			for (let i = 0; i < list.length; i++) {
+				const l = list[i];
+				if(l.id == payload.id) {
+					found = true;
+					list[i] = payload;
+				}
+			}
+			if(!found) {
+				list.push(payload);
+			}
+			localStorage.setItem("calendars", JSON.stringify(list));
+			state.data = payload;
+			state.calendars = list;
+		},
 
 		alert(state, payload) { state.alert = payload; },
 
 		createCalendar(state, payload) {
+			state.data.id = uuidv4();
 			state.data.daysDone = [];
 			state.data.days = payload.days;
 			state.data.name = payload.name;
 			state.data.start = new Date();
 			state.data.description = payload.description;
-			let dataurl = Utils.encodeForURI(payload);
-			router.push({name:"calendar", params:{name:Utils.slugify(state.data.name), dataurl:dataurl}});
+			//TODO
+			// let dataurl = Utils.encodeForURI(payload);
+			// router.push({name:"calendar", params:{name:Utils.slugify(state.data.name), dataurl:dataurl}});
 		},
 
 		checkDate(state, payload) {
 			if(!state.data.daysDone) state.data.daysDone = [];
 			if(!state.data.daysDone[payload.index]) state.data.daysDone[payload.index] = 0;
+
 			let v = payload.value? state.data.daysDone[payload.index]+1 : 0;
-			let cul = Vue.set(state.data.daysDone, payload.index, v);
-			let dataurl = Utils.encodeForURI(state.data);
-			router.push({name:"calendar", params:{name:Utils.slugify(state.data.name), dataurl:dataurl}});
+			Vue.set(state.data.daysDone, payload.index, v);
+
+			// let dataurl = Utils.encodeForURI(state.data);
+			// router.push({name:"calendar", params:{name:Utils.slugify(state.data.name), dataurl:dataurl}});
 		}
 
 	},
@@ -74,23 +95,47 @@ export default new Vuex.Store({
 		startApp({ commit, state, dispatch }, payload) {
 			//Security to make sure startApp isn't executed twice if changing URL while loading
 			if (startPromise && payload.force !== true) return startPromise;
+
+			let data = localStorage.getItem("calendars");
+			if(data) {
+				state.calendars = JSON.parse(data);
+			}
+			
 			if(payload.to.name == "calendar") {
-				try {
-					let data = Utils.decodeFromURI(payload.to.params.dataurl);
-					let needsUpdate = data.v != Config.DATA_VERSION;
-					if(needsUpdate) {
-						new DataMigrator().migrate(data);
+				if(payload.to.params.dataurl) {
+					//Old data loading from URL, migrate it to local storage
+					try {
+						let data = Utils.decodeFromURI(payload.to.params.dataurl);
+						let needsUpdate = data.v != Config.DATA_VERSION;
+						if(needsUpdate) {
+							new DataMigrator().migrate(data);
+						}
+						data.id = uuidv4();
+						commit("setData", data);
+						router.push({name:'calendar', params:{id:data.id}});
+					}catch(e) {
+						console.log(e);
+						commit("alert", "Unable to parse calendar data :(");
+						return Promise.reject(e);
+					}
+
+				}else{
+
+					//New data format, loading from local storage
+					let calendars = JSON.parse(localStorage.getItem("calendars"));
+					let data;
+					for (let i = 0; i < calendars.length; i++) {
+						if(calendars[i].id == payload.to.params.id) {
+							data = calendars[i];
+						}
+						if(calendars[i].v != Config.DATA_VERSION) {
+							try {
+								//Migrate data if necessary
+								new DataMigrator().migrate(calendars[i]);
+							}catch(e) {/*ignore*/}
+						}
 					}
 					commit("setData", data);
-					if(needsUpdate) {
-						//Update URI with new data
-						let dataurl = Utils.encodeForURI(state.data);
-						router.push({name:"calendar", params:{name:Utils.slugify(state.data.name), dataurl:dataurl}});
-					}
-				}catch(e) {
-					console.log(e);
-					commit("alert", "Unable to parse calendar data :(");
-					return Promise.reject(e);
 				}
 			}
 			
@@ -113,7 +158,12 @@ export default new Vuex.Store({
 		confirm({commit}, payload) { commit("confirm", payload); },
 
 		createCalendar({commit}, payload) { commit("createCalendar", payload); },
+		
+		setData({commit}, payload) { commit("setData", payload); },
 
-		checkDate({commit}, payload) { commit("checkDate", payload); },
+		checkDate({commit, state}, payload) {
+			commit("checkDate", payload);
+			commit("setData", state.data);
+		},
 	}
 })

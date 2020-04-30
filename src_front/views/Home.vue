@@ -1,7 +1,9 @@
 <template>
 	<div :class="classes" @leave="test()">
 		<div class="head">
-			<h1>Create a calendar</h1>
+			<div class="title">
+				<h1>Create a calendar</h1>
+			</div>
 		</div>
 		<div class="content">
 			<div class="infos">You want to push yourself doing a task every day ? Create a calendar and track your progress everyday.</div>

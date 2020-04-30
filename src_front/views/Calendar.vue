@@ -1,22 +1,36 @@
 <template>
 	<div class="calendar frame" v-if="data">
 		<div class="head">
-			<h1>{{this.data.name}} <i>({{countDone}}/{{data.days}})</i> </h1>
+			<Button :icon="require('@/assets/icons/back.svg')" class="back" @click="clickBack()" />
+			<div class="title">
+				<h1 contenteditable="true" @keydown="onFilterLineBreaks" @blur="updateTitle" ref="title" v-text="data.name"></h1>
+				<i>(<img src="@/assets/icons/checkmark.svg">{{countDone}}/{{data.days}})</i>
+			</div>
+			<Button :icon="require('@/assets/icons/qrcode.svg')" class="qrcode" @click="showQRCode = !showQRCode" />
 		</div>
-		<Button :icon="require('@/assets/icons/back.svg')" class="back" @click="clickBack()" />
-		<Button :icon="require('@/assets/icons/qrcode.svg')" class="qrcode" @click="showQRCode = !showQRCode" />
+
 		<QRCodeOverlay v-if="showQRCode" class="qrcodeOverlay" />
+
 		<div class="content" v-if="!showQRCode">
-			<pre v-if="data.description" class="description">{{this.data.description}}</pre>
+
+			<Button :icon="require('@/assets/icons/show.svg')" title="Description" @click="showDescription = !showDescription" class="toggleDescription" />
+			<pre v-if="data.description != null && showDescription"
+				class="description"
+				contenteditable="true"
+				@blur="updateDescription"
+				ref="description" v-text="this.data.description"></pre>
+
 			<div class="list">
 				<Checkable
 					:index="index"
+					:data="data"
 					@change="onCheckChange"
 					ref="items"
 					class="item" v-for="(v, index) in data.days"
 					:key="index"
 				/>
 			</div>
+
 		</div>
 	</div>
 </template>
@@ -28,6 +42,7 @@ import Button from '../components/Button.vue';
 import Checkable from '../components/Checkable.vue';
 import gsap from 'gsap';
 import QRCodeOverlay from './QRCodeOverlay.vue';
+import CalendarData from '../vo/CalendarData';
 
 @Component({
 	components:{
@@ -39,10 +54,12 @@ import QRCodeOverlay from './QRCodeOverlay.vue';
 export default class Calendar extends Vue {
 
 	@Prop()
-	public dataurl:any;
+	public id:any;
 
-	public data:any = null;
+	public historyIndex:number = 0;
+	public data:CalendarData = null;
 	public showQRCode:boolean = false;
+	public showDescription:boolean = false;
 
 	public get countDone():number {
 		if(!this.data.daysDone) return 0;
@@ -54,8 +71,43 @@ export default class Calendar extends Vue {
 		return count;
 	}
 
+	public get daysDone():number[] {
+		if(this.historyIndex != 0) {
+			return this.data.history[this.historyIndex].daysDone;
+		}else{
+			return this.data.daysDone;
+		}
+	}
+
+	public get complete():boolean {
+		let ref = new Date();
+		let d = new Date(this.data.start);
+		d.setHours(0)
+		d.setSeconds(0)
+		const oneDay = 24 * 60 * 60 * 1000;
+		const diffDays = Math.round(Math.abs((ref.getTime() - d.getTime()) / oneDay));
+		return diffDays > this.data.days;
+	}
+	
 	public mounted():void {
-		this.data = this.$store.state.data;
+		this.populate();
+	}
+
+	public beforeDestroy():void {
+		
+	}
+
+	@Watch("id")
+	public populate():void {
+		let list = this.$store.state.calendars;
+		for (let i = 0; i < list.length; i++) {
+			const l = list[i];
+			if(l.id == this.id) {
+				this.data = l;
+				this.$store.dispatch("setData", l);
+			}
+		}
+
 		this.$nextTick().then(_=> {
 			let elements:Vue[] = <Vue[]>this.$refs.items;
 			for (let i = 0; i < elements.length; i++) {
@@ -67,10 +119,6 @@ export default class Calendar extends Vue {
 			}
 		})
 	}
-
-	public beforeDestroy():void {
-		
-	}
 	
 	public onCheckChange(index:number, value:boolean):void {
 		this.$store.dispatch("checkDate", {index, value});
@@ -81,11 +129,28 @@ export default class Calendar extends Vue {
 		if(this.showQRCode) {
 			this.showQRCode = false;
 		}else{
-			Utils.confirm("Do you want to leave this calendar ?").then(_=> {
-				this.$router.push({name:'home'});
-			}).catch(error=>{});
+			this.$router.push({name:'home'});
 		}
 	}
+
+	public updateTitle():void {
+		let t = (<HTMLDivElement>this.$refs.title).innerText;
+		this.data.name = t;
+		this.$store.dispatch("setData", this.data);
+	}
+
+	public updateDescription():void {
+		let t = (<HTMLDivElement>this.$refs.description).innerText;
+		this.data.description = t;
+		this.$store.dispatch("setData", this.data);
+	}
+
+	public onFilterLineBreaks(event:KeyboardEvent):void {
+		if(event.which == 13) {
+			event.preventDefault();
+		}
+	}
+
 
 }
 </script>
@@ -98,6 +163,22 @@ export default class Calendar extends Vue {
 	.head {
 		padding-left: 50px;
 		padding-right: 50px;
+		i {
+			img {
+				height: 15px;
+				margin-left: 4px;
+				vertical-align: bottom;
+			}
+		}
+	}
+
+	.toggleDescription {
+		margin: auto;
+		margin-bottom: 20px;
+		display: block;
+		::v-deep .icon {
+			vertical-align: bottom;
+		}
 	}
 
 	.qrcode, .back {
@@ -128,10 +209,14 @@ export default class Calendar extends Vue {
 		box-sizing: border-box;
 
 		.description {
-			margin-bottom: 15px;
+			margin-bottom: 20px;
+			min-height: 20px;
 			text-align: center;
 			font-family: "FuturaLight";
 			white-space: pre-wrap;
+			padding: 5px;;
+			background-color: @mainColor_light_light;
+			border-radius: 10px;
 		}
 
 		.list {
@@ -140,8 +225,15 @@ export default class Calendar extends Vue {
 			flex-direction: row;
 			flex-wrap: wrap;
 		}
+
+		.restart {
+			margin: auto;
+			margin-top: 20px;
+			display: block;
+		}
 	}
 }
+
 @media only screen and (max-width: 500px) {
 	.calendar{
 		width: 360px;

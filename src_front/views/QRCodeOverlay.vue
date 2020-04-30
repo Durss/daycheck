@@ -8,6 +8,7 @@
 <script lang="ts">
 import { Component, Inject, Model, Prop, Vue, Watch, Provide } from "vue-property-decorator";
 import QRCode from 'qrcode';
+import Utils from '../utils/Utils';
 
 @Component({
 	components:{}
@@ -24,7 +25,11 @@ export default class QRCodeOverlay extends Vue {
 				light:"#ffffff",
 			}
 		}
-		QRCode.toDataURL(document.location.href, options).then(url => {
+		
+		let dataurl = Utils.encodeForURI(this.$store.state.data);
+		let url = this.$router.resolve({name:"calendar", params:{id:Utils.slugify(this.$store.state.data.name), dataurl:dataurl}}).href;
+		url = document.location.protocol+"//"+document.location.host+url;
+		QRCode.toDataURL(url, options).then(url => {
 			this.imageUrl = url;
 		})
 	}
