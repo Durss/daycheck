@@ -62,15 +62,15 @@ export default new Vuex.Store({
 		alert(state, payload) { state.alert = payload; },
 
 		createCalendar(state, payload) {
-			state.data.id = uuidv4();
-			state.data.daysDone = [];
-			state.data.days = payload.days;
-			state.data.name = payload.name;
-			state.data.start = new Date();
-			state.data.description = payload.description;
-			//TODO
-			// let dataurl = Utils.encodeForURI(payload);
-			// router.push({name:"calendar", params:{name:Utils.slugify(state.data.name), dataurl:dataurl}});
+			let data = {
+				id: uuidv4(),
+				daysDone: [],
+				days: payload.days,
+				name: payload.name,
+				start: new Date(),
+				description: payload.description,
+			};
+			state.data = data;
 		},
 
 		checkDate(state, payload) {
@@ -155,7 +155,11 @@ export default new Vuex.Store({
 
 		confirm({commit}, payload) { commit("confirm", payload); },
 
-		createCalendar({commit}, payload) { commit("createCalendar", payload); },
+		createCalendar({commit, state}, payload) {
+			commit("createCalendar", payload);
+			commit("setData", state.data);
+			router.push({name:"calendar", params:{id:state.data.id}});
+		},
 		
 		setData({commit}, payload) { commit("setData", payload); },
 
