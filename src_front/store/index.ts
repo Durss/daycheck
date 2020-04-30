@@ -77,11 +77,9 @@ export default new Vuex.Store({
 			if(!state.data.daysDone) state.data.daysDone = [];
 			if(!state.data.daysDone[payload.index]) state.data.daysDone[payload.index] = 0;
 
-			let v = payload.value? state.data.daysDone[payload.index]+1 : 0;
+			let v = state.data.daysDone[payload.index]+1;
+			if(v > 5) v = 0;
 			Vue.set(state.data.daysDone, payload.index, v);
-
-			// let dataurl = Utils.encodeForURI(state.data);
-			// router.push({name:"calendar", params:{name:Utils.slugify(state.data.name), dataurl:dataurl}});
 		}
 
 	},

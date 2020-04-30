@@ -24,26 +24,28 @@ import CalendarData from '../vo/CalendarData';
 export default class Checkable extends Vue {
 
 	@Prop()
-	public data:CalendarData;
+	public data:number[];
+
+	@Prop()
+	public startDate:string;
 
 	@Prop()
 	public index:number;
 
-	public value:number = 0;
-	public timeoutRefresh:NodeJS.Timeout = null;
-	public startDate:Date = null;
+	public timeoutRefresh:NodeJS.Timer = null;
 	public today:Date = null;
 
 	public get isToday():boolean {
-		return this.startDate.getDate() == this.today.getDate()
-		&& this.startDate.getMonth() == this.today.getMonth()
-		&& this.startDate.getFullYear() == this.today.getFullYear();
+		return this.date.getDate() == this.today.getDate()
+		&& this.date.getMonth() == this.today.getMonth()
+		&& this.date.getFullYear() == this.today.getFullYear();
 	}
 
 	public get isFuture():boolean {
-		return this.startDate.getDate() > this.today.getDate()
-		|| this.startDate.getMonth() > this.today.getMonth()
-		|| this.startDate.getFullYear() > this.today.getFullYear();
+		return !this.isToday;
+		return this.date.getDate() > this.today.getDate()
+		|| this.date.getMonth() > this.today.getMonth()
+		|| this.date.getFullYear() > this.today.getFullYear();
 	}
 
 	public get tooltip():string {
@@ -60,11 +62,18 @@ export default class Checkable extends Vue {
 		return res;
 	}
 
+	public get value():number {
+		let daysDone = this.data;
+		return daysDone && daysDone[this.index]? daysDone[this.index] : 0;
+	}
+
+	public get date():Date {
+		let d = new Date(this.startDate);
+		d.setDate(d.getDate() + this.index);
+		return d;
+	}
+
 	public beforeMount():void {
-		let daysDone = this.data.daysDone
-		this.value = daysDone && daysDone[this.index]? daysDone[this.index] : 0;
-		this.startDate = new Date(this.data.start);
-		this.startDate.setDate(this.startDate.getDate() + this.index);
 		this.scheduleRefresh();
 	}
 
@@ -73,9 +82,7 @@ export default class Checkable extends Vue {
 	}
 
 	public onClick():void {
-		this.value = ++this.value;
-		if(this.value > 5) this.value = 0;
-		this.$emit("change", this.index, this.value);
+		this.$emit("click", this.index);
 	}
 
 	private scheduleRefresh():void {
@@ -200,7 +207,7 @@ export default class Checkable extends Vue {
 	}
 
 	&.future {
-		filter: saturate(0%);
+		filter: saturate(60%);
 		pointer-events: none;
 	}
 }

@@ -441,4 +441,11 @@ export default class Utils {
 		let data = JSON.parse(LZString.decompressFromEncodedURIComponent(str));
 		return data;
 	}
+
+	public static formatDate(dateStr:string, fallback:string="jamais"):string {
+		if(!dateStr) return fallback;
+		let date:Date = new Date(dateStr);
+		function tod(nbr:number):string{ return nbr < 9? "0"+nbr : nbr.toString()}
+		return tod(date.getDate())+"/"+tod(date.getMonth()+1)+"/"+date.getFullYear();//+" "+tod(date.getHours())+"h"+tod(date.getMinutes());
+	}
 }
