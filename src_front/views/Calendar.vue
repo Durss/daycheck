@@ -125,10 +125,11 @@ export default class Calendar extends Vue {
 	public get complete():boolean {
 		let ref = new Date();
 		let d = new Date(this.data.start);
-		d.setHours(0)
-		d.setSeconds(0)
+		d.setHours(0);
+		d.setMinutes(0);
+		d.setSeconds(0);
 		const oneDay = 24 * 60 * 60 * 1000;
-		const diffDays = Math.round(Math.abs((ref.getTime() - d.getTime()) / oneDay));
+		const diffDays = Math.ceil(Math.abs((ref.getTime() - d.getTime()) / oneDay));
 		return diffDays >= this.data.days;
 	}
 	
@@ -194,7 +195,13 @@ export default class Calendar extends Vue {
 		}
 	}
 
-	public restart():void {
+	public async restart():Promise<void> {
+		try {
+			await Utils.confirm("Reset calendar ?", null, "Current calendar will be saved and reset. You'll be able to navigate to your previous calendar(s) to compare your performances.")
+		}catch(error) {
+			//Refused
+			return
+		}
 		let h = {
 			daysDone:JSON.parse(JSON.stringify(this.data.daysDone)),
 			start:this.data.start,
