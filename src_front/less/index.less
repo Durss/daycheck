@@ -46,6 +46,7 @@ a {
 			display: flex;
 			flex-direction: row;
 			align-items: baseline;
+			max-width: 100%;
 			
 			h1 {
 				font-weight: bold;
@@ -54,6 +55,9 @@ a {
 				font-family: "CircularPro";
 				padding: 10px 5px;
 				color: #fff;
+				overflow: hidden;
+				white-space: nowrap;
+				text-overflow: ellipsis;
 			}
 	
 			i {

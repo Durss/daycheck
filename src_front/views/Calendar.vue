@@ -238,12 +238,15 @@ export default class Calendar extends Vue {
 <style scoped lang="less">
 @import (reference) '../less/_includes.less';
 .calendar{
-	width: 640px;
+	width: 90vw;
+	max-width: 640px;
+	min-width: 280px;
 
 	.head {
 		padding-left: 50px;
 		padding-right: 50px;
 		i {
+			white-space: nowrap;
 			img {
 				height: 15px;
 				margin-left: 4px;
@@ -317,6 +320,7 @@ export default class Calendar extends Vue {
 			display: flex;
 			flex-direction: row;
 			flex-wrap: wrap;
+			justify-content: center;
 		}
 
 		.restart {
@@ -329,8 +333,6 @@ export default class Calendar extends Vue {
 
 @media only screen and (max-width: 500px) {
 	.calendar{
-		width: 360px;
-
 		.content {
 			.list {
 				width: 100%;
@@ -346,8 +348,6 @@ export default class Calendar extends Vue {
 
 @media only screen and (max-width: 320px) {
 	.calendar{
-		width: 280px;
-
 		.content {
 			.list {
 				width: 100%;

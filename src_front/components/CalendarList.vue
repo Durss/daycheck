@@ -127,7 +127,7 @@ export default class CalendarList extends Vue {
 		}
 
 		&.close-enter-active {
-			margin-left: -150px;
+			margin-left: -250px;
 		}
 		&.close-leave-active {
 			margin-left: -250px;
