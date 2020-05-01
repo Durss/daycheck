@@ -2,17 +2,18 @@
 	<div class="calendarlist">
 		<Button :icon="icon" @click="open = !open" class="toggle" />
 
-		<transition
-		mode="out-in"
-		enter-active-class="close"
-		leave-active-class="close">
-			<div :class="classes" v-if="open">
+		<transition name="close">
+			<div :class="classes" v-show="open">
 				<h1>Your calendars</h1>
 				<div class="list">
-					<Button v-for="c in calendars" :key="c.id"
-						:title="c.name"
-						:to="{name:'calendar', params:{id:c.id}}"
-						@click.native="open = false" />
+					<div v-for="c in calendars" :key="c.id" class="item">
+						<Button
+							:title="c.name"
+							:to="{name:'calendar', params:{id:c.id}}"
+							@click.native="open = false"
+							class="link" />
+						<Button :icon="require('@/assets/icons/delete.svg')" red class="delete" @click="onDelete(c)" />
+					</div>
 				</div>
 			</div>
 		</transition>
@@ -23,6 +24,7 @@
 import { Component, Inject, Model, Prop, Vue, Watch, Provide } from "vue-property-decorator";
 import CalendarData from '../vo/CalendarData';
 import Button from './Button.vue';
+import Utils from '../utils/Utils';
 
 @Component({
 	components:{
@@ -47,7 +49,7 @@ export default class CalendarList extends Vue {
 
 	public get classes():string[] {
 		let res = ["content"];
-		if(!this.open) res.push("close");
+		// if(!this.open) res.push("close");
 		return res;
 	}
 
@@ -57,6 +59,13 @@ export default class CalendarList extends Vue {
 
 	public beforeDestroy():void {
 		
+	}
+
+	public onDelete(data:CalendarData):void {
+		Utils.confirm("Delete calendar?", null, "This action cannot be undone!")
+		.then(_=> {
+			this.$store.dispatch("deleteCalendar", data.id);
+		}).catch(e=>{/*ignore*/});
 	}
 
 }
@@ -69,6 +78,7 @@ export default class CalendarList extends Vue {
 	top: 0;
 	left: 0;
 	max-width: 200px;
+	z-index: 1;
 
 	.toggle {
 		width: 40px;
@@ -82,6 +92,7 @@ export default class CalendarList extends Vue {
 		padding: 15px;
 		box-sizing: border-box;
 		background-color: @mainColor_light_extralight;
+		box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.25);
 
 		h1 {
 			font-size: 30px;
@@ -90,17 +101,35 @@ export default class CalendarList extends Vue {
 		.list {
 			display: flex;
 			flex-direction: column;
-			a {
+			.item {
+				display: flex;
+				flex-direction: row;
+				align-items: flex-start;
 				margin-top: 5px;
-				::v-deep .label {
-					width: 100%;
-					overflow: hidden;
-					text-overflow: ellipsis;
+				.link {
+					height: 40px;
+					border-top-right-radius: 0;
+					border-bottom-right-radius: 0;
+					flex: 1;
+					::v-deep .label {
+						width: 100%;
+						overflow: hidden;
+						text-overflow: ellipsis;
+					}
+				}
+				.delete {
+					height: 40px;
+					width: 40px;
+					border-top-left-radius: 0;
+					border-bottom-left-radius: 0;
 				}
 			}
 		}
 
-		&.close {
+		&.close-enter-active {
+			margin-left: -150px;
+		}
+		&.close-leave-active {
 			margin-left: -250px;
 		}
 	}

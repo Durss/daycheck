@@ -80,6 +80,20 @@ export default new Vuex.Store({
 			let v = state.data.daysDone[payload.index]+1;
 			if(v > 5) v = 0;
 			Vue.set(state.data.daysDone, payload.index, v);
+		},
+
+		deleteCalendar(state, payload) {
+			if(state.data && state.data.id == payload) {
+				router.push({name:"home"});
+			}
+			let list:CalendarData[] = state.calendars;
+			for (let i = 0; i < list.length; i++) {
+				const c = state.calendars[i];
+				if(c.id == payload) {
+					list.splice(i, 1);
+				}
+			}
+			localStorage.setItem("calendars", JSON.stringify(list));
 		}
 
 	},
@@ -167,5 +181,7 @@ export default new Vuex.Store({
 			commit("checkDate", payload);
 			commit("setData", state.data);
 		},
+
+		deleteCalendar({commit, state}, payload) { commit("deleteCalendar", payload); },
 	}
 })
