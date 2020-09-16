@@ -99,7 +99,6 @@ export default class Checkable extends Vue {
 </script>
 
 <style scoped lang="less">
-@import (reference) '../less/_includes.less';
 .checkable{
 	width: 100%;
 	height: 100%;

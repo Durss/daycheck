@@ -73,10 +73,10 @@ export interface Result {
 }
 
 export function Router<T extends any, IRoute>(routeParam: RouterParams) {
-	return (target: T) => {
+	return (target: any) => {
 		let original = target;
 
-		function construct(constructor: T, args: any[]) {
+		function construct(constructor: any, args: any[]) {
 			let c: any = function () {
 				return new constructor(args);
 			};

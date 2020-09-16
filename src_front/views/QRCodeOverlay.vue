@@ -42,7 +42,6 @@ export default class QRCodeOverlay extends Vue {
 </script>
 
 <style scoped lang="less">
-@import (reference) '../less/_includes.less';
 .qrcodeoverlay{
 	padding: 20px;
 	background: #fff;

@@ -72,7 +72,6 @@ export default class CalendarList extends Vue {
 </script>
 
 <style scoped lang="less">
-@import (reference) '../less/_includes.less';
 .calendarlist{
 	position: fixed;
 	top: 0;

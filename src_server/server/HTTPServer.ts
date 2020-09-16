@@ -19,6 +19,7 @@ export default class HTTPServer extends AbstractExpressServer {
 
 		this.app.use(historyApiFallback({
 			index:'/'+Config.SERVER_NAME+"/index.html",
+			//@ts-ignore
 			publicPath: Config.PUBLIC_PATH,
 			// verbose:true,
 			rewrites: [

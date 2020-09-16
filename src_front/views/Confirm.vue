@@ -83,7 +83,6 @@ export default class ConfirmView extends Vue {
 </script>
 
 <style lang="less" scoped>
-@import (reference) '../less/_includes.less';
 .confirm {
 	z-index: 99;
 	position: absolute;
@@ -190,7 +189,6 @@ export default class ConfirmView extends Vue {
 </style>
 
 <style lang="less">
-@import (reference) '../less/_includes.less';
 
 .confirm {
 

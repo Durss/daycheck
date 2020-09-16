@@ -236,7 +236,6 @@ export default class Calendar extends Vue {
 </script>
 
 <style scoped lang="less">
-@import (reference) '../less/_includes.less';
 .calendar{
 	width: 90vw;
 	max-width: 640px;
