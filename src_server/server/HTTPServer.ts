@@ -1,13 +1,19 @@
 import * as bodyParser from "body-parser";
-import * as express from "express";
-import { NextFunction, Request, Response } from "express-serve-static-core";
 import * as http from "http";
 import Config from '../utils/Config';
 import Logger from '../utils/Logger';
-import { AbstractExpressServer } from "./AbstractExpressServer";
 import * as historyApiFallback from 'connect-history-api-fallback';
+import * as express from "express";
+import { Express, NextFunction, Request, Response } from "express-serve-static-core";
 
-export default class HTTPServer extends AbstractExpressServer {
+export default class HTTPServer {
+	
+	protected app : Express = express();
+
+	constructor (public port : number) {
+		this.doPrepareApp();
+	}
+
 	protected initError(error: any): void {
 		Logger.error("Error happened !", error);
 	}
@@ -15,7 +21,6 @@ export default class HTTPServer extends AbstractExpressServer {
 	protected doPrepareApp(): void {
 		let server = new http.Server(<any>this.app);
 		server.listen(this.port);
-		
 
 		this.app.use(historyApiFallback({
 			index:'/'+Config.SERVER_NAME+"/index.html",
@@ -33,8 +38,8 @@ export default class HTTPServer extends AbstractExpressServer {
 			],
 		}));
 
-		let publicFolder = Config.PUBLIC_PATH;
-		this.app.use(Config.SERVER_NAME+"/", express.static(publicFolder));//static files
+		let staticHandler:any = express.static(Config.PUBLIC_PATH);
+		this.app.use(Config.SERVER_NAME+"/", staticHandler);//static files
 
 		this.app.use(<any>bodyParser.json({limit: '10mb'}));
 		this.app.use(<any>bodyParser.urlencoded({ extended: true }));
@@ -51,10 +56,17 @@ export default class HTTPServer extends AbstractExpressServer {
 		Logger.success("Server ready on port " + Config.SERVER_PORT + " :: server name \"" + Config.SERVER_NAME + "\"");
 	}
 
-
-	protected errorHandler(error: any, req: Request, res: Response, next: NextFunction): any {
+	protected errorHandler (error : any, req : Request, res : Response, next : NextFunction) {
 		Logger.error("Express error");
-		console.log(error)
-		return super.errorHandler(error, req, res, next);
+		console.log(error);
+		
+		let status = error.status || 500;
+		let err = error.error || error;
+		res.status(status);
+		if (typeof err == "object")
+			res.json(err);
+		else {
+			res.send(err);
+		}
 	}
 }

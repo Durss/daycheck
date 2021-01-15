@@ -153,7 +153,7 @@ export default new Vuex.Store({
 			
 			startPromise = new Promise(async (resolve, reject) => {
 				commit("initComplete", true);
-				resolve();
+				resolve(null);
 			});
 
 			return startPromise;

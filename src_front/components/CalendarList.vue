@@ -1,5 +1,5 @@
 <template>
-	<div class="calendarlist">
+	<div class="calendarlist" v-if="calendars && calendars.length > 0">
 		<Button :icon="icon" @click="open = !open" class="toggle" />
 
 		<transition name="close">
