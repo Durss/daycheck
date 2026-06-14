@@ -1,0 +1,22 @@
+# Dependencies and build artifacts (regenerated inside the image)
+node_modules
+dist
+server
+
+# Git / tooling
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Docs / logs
+*.md
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

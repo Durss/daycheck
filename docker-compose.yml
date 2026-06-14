@@ -1,0 +1,8 @@
+services:
+  daycheck:
+    build: .
+    image: daycheck
+    container_name: daycheck
+    ports:
+      - "3003:3003"
+    restart: unless-stopped

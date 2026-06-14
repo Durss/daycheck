@@ -39,3 +39,20 @@ Run it as a service with PM2 :
 ```
 pm2 start bootstrap-pm2.json
 ```
+
+## Run with Docker
+A multi-stage `Dockerfile` builds the frontend and the server, then ships only the
+production dependencies and the compiled output. The app is served on port `3003`.
+
+Build and run with Docker :
+```
+docker build -t daycheck .
+docker run -d -p 3003:3003 --name daycheck daycheck
+```
+
+Or with Docker Compose :
+```
+docker compose up -d --build
+```
+
+Then open http://localhost:3003
