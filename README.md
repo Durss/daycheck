@@ -4,16 +4,12 @@ Simple app to track your progress on a task you want to achieve every day for a 
 See it at :  
 https://daycheck.fr
 
+Frontend is built with Vue 3 + Vite, server is a tiny Express app.  
 In its current state, the server code only serves static files and manages the history mode of the vue router by redirecting all URLs to index.html.
 
 ## Environment setup
-Install Node :
+Install Node 22.12+ (24 LTS recommended) :
 https://nodejs.org/en/download/
-
-Install typescript :
-```
-npm install -g typescript
-```
 
 
 ## Project setup
@@ -25,6 +21,7 @@ npm install
 ```
 npm run dev
 ```
+Frontend dev server runs on http://localhost:5173
 
 ### Compiles and minifies frontend AND server for production
 ```

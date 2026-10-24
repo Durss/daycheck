@@ -1,5 +1,5 @@
-import store from '@/store';
-import * as LZString from "lz-string";
+import { storeMain as useStoreMain, type ConfirmData } from '@/store/main/storeMain';
+import LZString from "lz-string";
 import Config from './Config';
 
 /**
@@ -366,19 +366,30 @@ export default class Utils {
 	 */
 	public static confirm<T>(title:string, data?:T, description?:string):Promise<T> {
 		let prom = <Promise<T>>new Promise((resolve, reject) => {
-			let confirmData:any = {}
-			confirmData.title = title;
-			confirmData.description = description;
-			confirmData.confirmCallback = ()=> {
-				resolve(data);
+			let confirmData:ConfirmData = {
+				title,
+				description,
+				confirmCallback: ()=> {
+					resolve(data);
+				},
+				cancelCallback: ()=> {
+					reject(data);
+				},
 			};
-			confirmData.cancelCallback = ()=> {
-				reject(data);
-			};
-			store.dispatch("confirm", confirmData);
+			useStoreMain().confirm = confirmData;
 		});
 		prom.catch((error)=>{/*ignore*/});//Avoid uncaugh error if not catched externally
 		return prom;
+	}
+
+	/**
+	 * Generates a random v4 UUID.
+	 * Doesn't rely on crypto.randomUUID() which is only available on HTTPS
+	 */
+	public static uuid():string {
+		return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+			(parseInt(c) ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> parseInt(c) / 4).toString(16)
+		);
 	}
 
 	/**

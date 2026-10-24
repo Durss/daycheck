@@ -5,40 +5,34 @@
 	</div>
 </template>
 
-<script lang="ts">
-import { Component, Inject, Model, Prop, Vue, Watch, Provide } from "vue-property-decorator";
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import QRCode from 'qrcode';
 import Utils from '../utils/Utils';
+import { storeMain as useStoreMain } from '@/store/main/storeMain';
 
-@Component({
-	components:{}
-})
-export default class QRCodeOverlay extends Vue {
+const storeMain = useStoreMain();
+const router = useRouter();
 
-	private imageUrl:string = null;
+const imageUrl = ref<string>(null);
 
-	public mounted():void {
-		let options = {
-			margin:0,
-			color: {
-				dark:"#e7bd00",
-				light:"#ffffff",
-			}
+onMounted(() => {
+	let options = {
+		margin:0,
+		color: {
+			dark:"#e7bd00",
+			light:"#ffffff",
 		}
-		
-		let dataurl = Utils.encodeForURI(this.$store.state.data);
-		let url = this.$router.resolve({name:"calendar", params:{id:Utils.slugify(this.$store.state.data.name), dataurl:dataurl}}).href;
-		url = document.location.protocol+"//"+document.location.host+url;
-		QRCode.toDataURL(url, options).then(url => {
-			this.imageUrl = url;
-		})
 	}
 
-	public beforeDestroy():void {
-		
-	}
-
-}
+	let dataurl = Utils.encodeForURI(storeMain.data);
+	let url = router.resolve({name:"calendar", params:{id:Utils.slugify(storeMain.data.name), dataurl:dataurl}}).href;
+	url = document.location.protocol+"//"+document.location.host+url;
+	QRCode.toDataURL(url, options).then(url => {
+		imageUrl.value = url;
+	})
+});
 </script>
 
 <style scoped lang="less">

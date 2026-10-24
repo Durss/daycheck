@@ -1,26 +1,24 @@
-import Vue from 'vue'
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
-import store from './store'
+import { storeMain as useStoreMain } from './store/main/storeMain'
 import './less/index.less';
 
-Vue.config.productionTip = false;
+const app = createApp(App);
+app.use(createPinia());
 
-router.beforeEach((to, from, next) => {
-	if (!store.state.initComplete) {
-		store.dispatch("startApp", {router, to}).then(_=> {
-			next();
-		}).catch((e)=> {
-			console.log(e);
-			router.push({name:"home"});
-		});
-	}else{
-		next();
+const storeMain = useStoreMain();
+
+router.beforeEach(async (to) => {
+	if (storeMain.initComplete) return;
+	try {
+		await storeMain.startApp(to);
+	}catch(e) {
+		console.log(e);
+		return {name:"home"};
 	}
 });
 
-new Vue({
-  router,
-  store,
-  render: h => h(App)
-}).$mount('#app')
+app.use(router);
+app.mount('#app');

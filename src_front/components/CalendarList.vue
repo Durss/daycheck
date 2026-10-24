@@ -10,9 +10,9 @@
 						<Button
 							:title="c.name"
 							:to="{name:'calendar', params:{id:c.id}}"
-							@click.native="open = false"
+							@click="open = false"
 							class="link" />
-						<Button :icon="require('@/assets/icons/delete.svg')" red class="delete" @click="onDelete(c)" />
+						<Button :icon="deleteIcon" red class="delete" @click="onDelete(c)" />
 					</div>
 				</div>
 			</div>
@@ -20,54 +20,43 @@
 	</div>
 </template>
 
-<script lang="ts">
-import { Component, Inject, Model, Prop, Vue, Watch, Provide } from "vue-property-decorator";
-import CalendarData from '../vo/CalendarData';
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import type CalendarData from '../vo/CalendarData';
 import Button from './Button.vue';
 import Utils from '../utils/Utils';
+import { storeMain as useStoreMain } from '@/store/main/storeMain';
+import deleteIcon from '@/assets/icons/delete.svg';
+import crossWhiteIcon from '@/assets/icons/cross_white.svg';
+import burgerIcon from '@/assets/icons/burger.svg';
 
-@Component({
-	components:{
-		Button,
+const storeMain = useStoreMain();
+
+const open = ref<boolean>(false);
+
+const calendars = computed<CalendarData[]>(() => {
+	return storeMain.calendars;
+});
+
+const icon = computed<string>(() => {
+	if(open.value) {
+		return crossWhiteIcon;
+	}else{
+		return burgerIcon;
 	}
-})
-export default class CalendarList extends Vue {
+});
 
-	public open:boolean = false;
+const classes = computed<string[]>(() => {
+	let res = ["content"];
+	// if(!open.value) res.push("close");
+	return res;
+});
 
-	public get calendars():CalendarData[] {
-		return this.$store.state.calendars;
-	}
-
-	public get icon():string {
-		if(this.open) {
-			return require('@/assets/icons/cross_white.svg')
-		}else{
-			return require('@/assets/icons/burger.svg')
-		}
-	}
-
-	public get classes():string[] {
-		let res = ["content"];
-		// if(!this.open) res.push("close");
-		return res;
-	}
-
-	public mounted():void {
-		
-	}
-
-	public beforeDestroy():void {
-		
-	}
-
-	public onDelete(data:CalendarData):void {
-		Utils.confirm("Delete calendar?", null, "This action cannot be undone!")
-		.then(_=> {
-			this.$store.dispatch("deleteCalendar", data.id);
-		}).catch(e=>{/*ignore*/});
-	}
-
+function onDelete(data:CalendarData):void {
+	Utils.confirm("Delete calendar?", null, "This action cannot be undone!")
+	.then(_=> {
+		storeMain.deleteCalendar(data.id);
+	}).catch(e=>{/*ignore*/});
 }
 </script>
 
@@ -110,7 +99,7 @@ export default class CalendarList extends Vue {
 					border-top-right-radius: 0;
 					border-bottom-right-radius: 0;
 					flex: 1;
-					::v-deep .label {
+					:deep(.label) {
 						width: 100%;
 						overflow: hidden;
 						text-overflow: ellipsis;

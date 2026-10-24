@@ -2,134 +2,69 @@
 	<component
 	:class="classes"
 	:is="nodeType"
-	:type="type=='checkbox'? null : type"
-	:target="target"
-	:to="to"
-	:data-selected="selected"
-	@click="$emit('click')"
-	:style="progressStyle">
-		<img :src="parsedIcon" v-if="parsedIcon" alt="icon" class="icon" :class="loading? 'hide' : 'show'">
-		<!--
-			<img v-if="loading &&  white !== false" src="@/assets/loader/loader_light.svg" alt="icon" class="spinner">
-			<img v-if="loading && white === false" src="@/assets/loader/loader_white.svg" alt="icon" class="spinner">
-		-->
-		<img v-if="loading" src="@/assets/loader/loader.svg" alt="icon" class="spinner">
-		<span class="label" :class="loading? 'hide' : 'show'" v-if="title" v-html="title"></span>
-		<input type="file" v-if="type=='file'" class="browse" accept=".zip" ref="browse" @change="$emit('change', $event)" />
-		<input type="checkbox" :name="name" :id="name" class="checkbox" ref="checkbox" v-model="checked" v-if="type=='checkbox'" />
+	:type="props.type"
+	:target="props.target"
+	:to="props.to"
+	@click="emit('click')">
+		<img :src="parsedIcon" v-if="parsedIcon" alt="icon" class="icon" :class="props.loading? 'hide' : 'show'">
+		<img v-if="props.loading" src="@/assets/loader/loader.svg" alt="icon" class="spinner">
+		<span class="label" :class="props.loading? 'hide' : 'show'" v-if="props.title" v-html="props.title"></span>
 	</component>
 </template>
 
-<script lang="ts">
-import { Component, Inject, Model, Prop, Vue, Watch, Provide } from "vue-property-decorator";
-import gsap from 'gsap';
+<script setup lang="ts">
+import { computed } from "vue";
+import { RouterLink, type RouteLocationRaw } from "vue-router";
 
-@Component
-export default class Button extends Vue {
+const props = withDefaults(defineProps<{
+	icon?:string;
+	iconSelected?:string;
+	title?:string;
+	loading?:boolean;
+	type?:string;
+	target?:string;
+	to?:RouteLocationRaw;
+	white?:boolean;
+	red?:boolean;
+	selected?:boolean;
+	disabled?:boolean;
+}>(), {
+	loading: false,
+	type: "button",
+	to: null,
+	white: false,
+	red: false,
+	selected: false,
+	disabled: false,
+});
 
-	@Prop()
-	public icon!:string;
-	@Prop()
-	public iconSelected!:string;
-	@Prop()
-	public title!:string;
-	@Prop()
-	public name!:string;
-	@Prop({default: false})
-	public loading!:boolean;
-	@Prop({default: "button"})
-	public type!:string;
-	@Prop()
-	public target!:string;
-	@Prop({default: null})
-	public to!:any;
-	@Prop({default: -1})
-	public percent!:number;
-	@Prop({default:false})
-	public white!:boolean;
-	@Prop({default:false})
-	public red!:boolean;
-	@Prop({default:false})
-	public selected!:boolean;
-	@Prop({default:false})
-	public disabled!:boolean;
-	@Prop({default:false})
-	public value!:boolean;
+const emit = defineEmits<{
+	click: [];
+}>();
 
-	private iconClass:string = "";
-	public pInterpolated:number = -1;
-	public checked:boolean = false;
+const nodeType = computed(() => {
+	if(props.to) return RouterLink;
+	return "button";
+});
 
-	public get nodeType():string {
-		if(this.to) return "router-link";
-		if(this.type == "checkbox") return "div";
-		return "button";
+const parsedIcon = computed<string>(() => {
+	if(props.selected !== false && props.iconSelected) {
+		return props.iconSelected;
+	}else{
+		return props.icon;
 	}
+});
 
-	public get parsedIcon():string {
-		if(this.type == "checkbox" && this.value) {
-			return require("@/assets/icons/checkmark.svg");
-		}
-		if(this.selected !== false && this.iconSelected) {
-			return this.iconSelected;
-		}else{
-			return this.icon;
-		}
-	}
-
-	public get progressStyle():any {
-		if(this.pInterpolated> -1 && this.pInterpolated<100) {
-			let p:number = Math.round(this.pInterpolated);
-			let color = "255, 255, 255";
-			let alpha = .5;
-			if(this.white) {
-				color = "75, 201, 194"
-				alpha = .3;
-			}
-			return {backgroundImage: "linear-gradient(to right, rgba("+color+",0) "+p+"%,rgba("+color+",0) "+p+"%,rgba("+color+","+alpha+") "+p+"%,rgba("+color+","+alpha+") 100%)"};
-		}else{
-			return {};
-		}
-	}
-
-	public get classes():any {
-		let list =  ["button"]
-		if(!this.title) list.push("noTitle");
-		if(this.white !== false) list.push("white");
-		if(this.red !== false) list.push("red");
-		if(this.selected !== false) list.push("selected");
-		if(this.loading !== false) list.push("disabled");
-		if(this.disabled !== false) list.push("disabled");
-		if(this.type == "checkbox") list.push("checkbox");
-		return list;
-	}
-
-	public mounted():void {
-		this.checked = this.value;
-	}
-	
-	public beforeDestroy():void {
-		
-	}
-
-	public resetBrowse():void {
-		(<HTMLFormElement>this.$refs.browse).value = null;
-	}
-
-
-	@Watch("checked")
-	public onSelectStateChange():void {
-		this.$emit('input', this.checked);
-	}
-
-	@Watch("percent")
-	private onPercentChange():void {
-		let duration = this.percent < this.pInterpolated? 0 : .35;
-		gsap.killTweensOf(this);
-		gsap.to(this, {duration, pInterpolated:this.percent, ease:"sine.inout"});
-	}
-
-}
+const classes = computed<string[]>(() => {
+	let list =  ["button"]
+	if(!props.title) list.push("noTitle");
+	if(props.white !== false) list.push("white");
+	if(props.red !== false) list.push("red");
+	if(props.selected !== false) list.push("selected");
+	if(props.loading !== false) list.push("disabled");
+	if(props.disabled !== false) list.push("disabled");
+	return list;
+});
 </script>
 
 <style lang="less" scoped>
@@ -153,32 +88,6 @@ export default class Button extends Vue {
 			width: 100%;
 			margin: 0;
 			padding: 0;
-		}
-	}
-
-	&.checkbox {
-		background: none;
-		border: 1px solid @mainColor_normal;
-		border-radius: 7px;
-		padding: 0px;
-		width: 25px;
-		height: 25px;
-		cursor: pointer;
-
-		.checkbox {
-			opacity: .001;
-			position: absolute;
-			padding: 0;
-			margin: 0;
-			width: 100%;
-			height: 100%;
-			cursor: pointer;
-		}
-		.icon {
-			width: 70%;
-		}
-		&:hover {
-			background-color: @mainColor_normal_extralight;
 		}
 	}
 
@@ -208,17 +117,6 @@ export default class Button extends Vue {
 		&.hide {
 			opacity: .25;
 		}
-	}
-
-	.browse {
-		opacity: 0;
-		position: absolute;
-		z-index: 0;
-		left: 0;
-		width: 100%;
-		height: 200%;//Hack to avoid browse button from locking cursor:pointer by putting it out of button's bounds
-		cursor: pointer;
-		font-size: 0px;
 	}
 
 	&.white {

@@ -1,5 +1,5 @@
 <template>
-	<div :class="classes" @leave="test()">
+	<div :class="classes">
 		<div class="head">
 			<div class="title">
 				<h1>Create a calendar</h1>
@@ -27,44 +27,30 @@
 	</div>
 </template>
 
-<script lang="ts">
-import { Component, Inject, Model, Prop, Vue, Watch, Provide } from "vue-property-decorator";
+<script setup lang="ts">
+import { computed, ref } from "vue";
 import Button from '../components/Button.vue';
+import { storeMain as useStoreMain } from '@/store/main/storeMain';
 
-@Component({
-	components:{
-		Button,
-	}
-})
-export default class Home extends Vue {
+const storeMain = useStoreMain();
 
-	public loading:boolean = false;
-	public openDescription:boolean = false;
-	public name:string = "";
-	public description:string = "";
-	public days:number = 30;
+const loading = ref<boolean>(false);
+const openDescription = ref<boolean>(false);
+const name = ref<string>("");
+const description = ref<string>("");
+const days = ref<number>(30);
 
-	public get classes():string[] {
-		let res = ["home", "frame"];
-		return res;
-	}
+const classes = computed<string[]>(() => {
+	let res = ["home", "frame"];
+	return res;
+});
 
-
-	public mounted():void {
-		
-	}
-
-	public beforeDestroy():void {
-	}
-
-	public onSubmit():void {
-		this.$store.dispatch("createCalendar", {
-			name:this.name,
-			days:parseInt(<any>this.days),//Force parsing as int. For some reason if user write manually in the field, the var type becomes a string...
-			description:this.description,
-		})
-	}
-
+function onSubmit():void {
+	storeMain.createCalendar({
+		name:name.value,
+		days:parseInt(<any>days.value),//Force parsing as int. For some reason if user write manually in the field, the var type becomes a string...
+		description:description.value,
+	})
 }
 </script>
 

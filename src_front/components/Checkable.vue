@@ -1,7 +1,7 @@
 <template>
 	<div :class="classes" @click="onClick" :data-tooltip="tooltip">
 		<div class="inner">
-			<span v-if="value==0">{{index+1}}</span>
+			<span v-if="value==0">{{props.index+1}}</span>
 			<img src="@/assets/icons/checkmark.svg" alt="check" v-if="value>0" class="checkmark">
 			<div class="steps" v-if="value>0">
 				<img src="@/assets/icons/star.svg" alt="check" v-if="value>0" class="star">
@@ -14,87 +14,77 @@
 	</div>
 </template>
 
-<script lang="ts">
-import { Component, Inject, Model, Prop, Vue, Watch, Provide } from "vue-property-decorator";
-import CalendarData from '../vo/CalendarData';
+<script setup lang="ts">
+import { computed, onBeforeMount, onBeforeUnmount, ref } from "vue";
 
-@Component({
-	components:{}
-})
-export default class Checkable extends Vue {
+const props = defineProps<{
+	data:number[];
+	startDate:string;
+	index:number;
+}>();
 
-	@Prop()
-	public data:number[];
+const emit = defineEmits<{
+	click: [index:number];
+}>();
 
-	@Prop()
-	public startDate:string;
+let timeoutRefresh:ReturnType<typeof setTimeout> = null;
+const today = ref<Date>(null);
 
-	@Prop()
-	public index:number;
+const date = computed<Date>(() => {
+	let d = new Date(props.startDate);
+	d.setDate(d.getDate() + props.index);
+	return d;
+});
 
-	public timeoutRefresh:NodeJS.Timer = null;
-	public today:Date = null;
+const isToday = computed<boolean>(() => {
+	return date.value.getDate() == today.value.getDate()
+	&& date.value.getMonth() == today.value.getMonth()
+	&& date.value.getFullYear() == today.value.getFullYear();
+});
 
-	public get isToday():boolean {
-		return this.date.getDate() == this.today.getDate()
-		&& this.date.getMonth() == this.today.getMonth()
-		&& this.date.getFullYear() == this.today.getFullYear();
-	}
+const isFuture = computed<boolean>(() => {
+	return !isToday.value;
+});
 
-	public get isFuture():boolean {
-		return !this.isToday;
-		return this.date.getDate() > this.today.getDate()
-		|| this.date.getMonth() > this.today.getMonth()
-		|| this.date.getFullYear() > this.today.getFullYear();
-	}
+const tooltip = computed<string>(() => {
+	if(isToday.value) return "Today";
+	return "";
+});
 
-	public get tooltip():string {
-		if(this.isToday) return "Today";
-		return "";
-	}
+const value = computed<number>(() => {
+	let daysDone = props.data;
+	return daysDone && daysDone[props.index]? daysDone[props.index] : 0;
+});
 
-	public get classes():string[] {
-		let res = ["checkable"];
-		if(this.value>0) res.push("selected");
-		if(this.isToday) res.push("today");
-		if(this.isFuture) res.push("future");
-		if(this.value>0) res.push("size"+this.value);
-		return res;
-	}
+const classes = computed<string[]>(() => {
+	let res = ["checkable"];
+	if(value.value>0) res.push("selected");
+	if(isToday.value) res.push("today");
+	if(isFuture.value) res.push("future");
+	if(value.value>0) res.push("size"+value.value);
+	return res;
+});
 
-	public get value():number {
-		let daysDone = this.data;
-		return daysDone && daysDone[this.index]? daysDone[this.index] : 0;
-	}
+onBeforeMount(() => {
+	scheduleRefresh();
+});
 
-	public get date():Date {
-		let d = new Date(this.startDate);
-		d.setDate(d.getDate() + this.index);
-		return d;
-	}
+onBeforeUnmount(() => {
+	clearTimeout(timeoutRefresh);
+});
 
-	public beforeMount():void {
-		this.scheduleRefresh();
-	}
+function onClick():void {
+	emit("click", props.index);
+}
 
-	public beforeDestroy():void {
-		clearTimeout(this.timeoutRefresh);
-	}
-
-	public onClick():void {
-		this.$emit("click", this.index);
-	}
-
-	private scheduleRefresh():void {
-		this.today = new Date();
-		let tomorrow = new Date();
-		tomorrow.setHours(tomorrow.getHours()+24);
-		tomorrow.setHours(0);
-		tomorrow.setMinutes(0);
-		tomorrow.setSeconds(0);
-		this.timeoutRefresh = setTimeout(this.scheduleRefresh,  tomorrow.getTime() - this.today.getTime() + 1000);//add 1sec for safety
-	}
-
+function scheduleRefresh():void {
+	today.value = new Date();
+	let tomorrow = new Date();
+	tomorrow.setHours(tomorrow.getHours()+24);
+	tomorrow.setHours(0);
+	tomorrow.setMinutes(0);
+	tomorrow.setSeconds(0);
+	timeoutRefresh = setTimeout(scheduleRefresh,  tomorrow.getTime() - today.value.getTime() + 1000);//add 1sec for safety
 }
 </script>
 

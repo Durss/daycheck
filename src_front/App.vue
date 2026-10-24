@@ -1,12 +1,14 @@
 <template>
 	<div class="app">
-		<Button :icon="require('@/assets/icons/back.svg')" class="back" v-if="showBack" @click="back()" />
-		<transition
-		mode="out-in"
-		enter-active-class="close"
-		leave-active-class="close">
-			<router-view :class="classes" ref="page" mode="out-in"></router-view>
-		</transition>
+		<Button :icon="backIcon" class="back" v-if="showBack" @click="back()" />
+		<router-view v-slot="{ Component }">
+			<transition
+			mode="out-in"
+			enter-active-class="close"
+			leave-active-class="close">
+				<component :is="Component" :class="classes" />
+			</transition>
+		</router-view>
 		<CalendarList />
 		<ConfirmView />
 		<AlertView />
@@ -14,54 +16,34 @@
 	</div>
 </template>
 
-<script lang="ts">
-import { Component, Inject, Model, Prop, Vue, Watch, Provide } from "vue-property-decorator";
+<script setup lang="ts">
+import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import backIcon from '@/assets/icons/back.svg';
 import Tooltip from './components/Tooltip.vue';
 import ConfirmView from './views/Confirm.vue';
 import AlertView from './views/AlertView.vue';
 import Button from './components/Button.vue';
 import CalendarList from './components/CalendarList.vue';
 
-@Component({
-	components:{
-		Button,
-		Tooltip,
-		AlertView,
-		ConfirmView,
-		CalendarList,
-	}
-})
-export default class App extends Vue {
+const router = useRouter();
 
-	public from:any;
-	public close:boolean = true;
-	public showBack:boolean = false;
+const close = ref<boolean>(true);
+const showBack = ref<boolean>(false);
 
-	public get classes():string[] {
-		let res = ["page"];
-		if(this.close) res.push("close");
-		return res;
-	}
+const classes = computed<string[]>(() => {
+	let res = ["page"];
+	if(close.value) res.push("close");
+	return res;
+});
 
-	public mounted():void {
-		this.close = false;
-		// this.showBack = this.$route.name != "home";
-	}
+onMounted(() => {
+	close.value = false;
+	// showBack.value = route.name != "home";
+});
 
-	public beforeDestroy():void {
-		
-	}
-
-	@Watch("$route")
-	public onRouteChange(to, from):void {
-		this.from = <any>this.$refs.page;
-		// this.showBack = to.name != "home";
-	}
-
-	public back() {
-		this.$router.push({name:"home"});
-	}
-
+function back() {
+	router.push({name:"home"});
 }
 </script>
 

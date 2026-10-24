@@ -5,80 +5,89 @@
 			<div class="title" v-html="title"></div>
 			<div class="description" v-html="description"></div>
 			<div class="buttons">
-				<button type="cancel" @click="answer()">No</button>
+				<button type="button" class="cancel" @click="answer()">No</button>
 				<button @click="answer(true)" class="dark confirmBt">Yes</button>
 			</div>
 		</div>
 	</div>
 </template>
 
-<script lang="ts">
-import { Component, Inject, Model, Prop, Vue, Watch, Provide } from 'vue-property-decorator';
+<script setup lang="ts">
+import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 import gsap from "gsap";
+import { storeMain as useStoreMain } from '@/store/main/storeMain';
 
-@Component
-export default class ConfirmView extends Vue {
-	public title:string = "";
-	public description:string = "";
-	public hidden:boolean = true;
+const storeMain = useStoreMain();
 
-	public mounted():void {
-		document.addEventListener("keyup", (e:KeyboardEvent) => this.onKeyUp(e))
+const dimmer = useTemplateRef<HTMLDivElement>("dimmer");
+const holder = useTemplateRef<HTMLDivElement>("holder");
+
+const title = ref<string>("");
+const description = ref<string>("");
+const hidden = ref<boolean>(true);
+
+const keyUpHandler = (e:KeyboardEvent) => onKeyUp(e);
+
+onMounted(() => {
+	document.addEventListener("keyup", keyUpHandler);
+});
+
+onBeforeUnmount(() => {
+	document.removeEventListener("keyup", keyUpHandler);
+});
+
+watch(() => storeMain.confirm, () => onConfirmChanged(), { immediate: true, deep: true });
+
+function onConfirmChanged() {
+	let isHidden = !storeMain.confirm || !storeMain.confirm.title;
+
+	if(hidden.value == isHidden) return;//No change, ignore
+
+	if(!isHidden) {
+		hidden.value = isHidden;
+		title.value = storeMain.confirm.title;
+		description.value = storeMain.confirm.description;
+		(<HTMLElement>document.activeElement)?.blur();//avoid clicking again on focused button if submitting confirm via SPACE key
+		gsap.killTweensOf([holder.value, dimmer.value]);
+		gsap.set(holder.value, {marginTop:0, opacity:1});
+		gsap.to(dimmer.value, {duration:.5, opacity:1});
+		gsap.from(holder.value, {duration:.5, marginTop:100, opacity:0, ease:"back.out"});
+	}else{
+		gsap.killTweensOf([holder.value, dimmer.value]);
+		gsap.to(dimmer.value, {duration:.5, opacity:0});
+		gsap.to(holder.value, {duration:.5, marginTop:100, opacity:0, ease:"back.in", onComplete:()=> {
+			hidden.value = true;
+		}});
 	}
+}
 
-	@Watch('$store.state.confirm', { immediate: true, deep: true })
-	private onConfirmChanged() {
-		let hidden = !this.$store.state.confirm || !this.$store.state.confirm.title;
-		
-		if(this.hidden == hidden) return;//No change, ignore
+function onKeyUp(e:KeyboardEvent):void {
+	if(hidden.value) return;
+	if(e.key == "Enter" || e.key == " ") {//Enter / space
+		answer(true);
+		e.preventDefault();
+		e.stopPropagation();
+	}
+	if(e.key == "Escape") {//escape
+		answer(false);
+		e.preventDefault();
+		e.stopPropagation();
+	}
+}
 
-		if(!hidden) {
-			this.hidden = hidden;
-			this.title = this.$store.state.confirm.title;
-			this.description = this.$store.state.confirm.description;
-			//@ts-ignore
-			document.activeElement.blur();//avoid clicking again on focused button if submitting confirm via SPACE key
-			gsap.killTweensOf([this.$refs.holder, this.$refs.dimmer]);
-			gsap.set(this.$refs.holder, {marginTop:0, opacity:1});
-			gsap.to(this.$refs.dimmer, {duration:.5, opacity:1});
-			gsap.from(this.$refs.holder, {duration:.5, marginTop:100, opacity:0, ease:"back.out"});
-		}else{
-			gsap.killTweensOf([this.$refs.holder, this.$refs.dimmer]);
-			gsap.to(this.$refs.dimmer, {duration:.5, opacity:0});
-			gsap.to(this.$refs.holder, {duration:.5, marginTop:100, opacity:0, ease:"back.in", onComplete:()=> {
-				this.hidden = true;
-			}});
+function answer(confirm?:boolean):void {
+	if(!storeMain.confirm) return;
+
+	if(confirm) {
+		if(storeMain.confirm.confirmCallback) {
+			storeMain.confirm.confirmCallback();
+		}
+	}else{
+		if(storeMain.confirm.cancelCallback) {
+			storeMain.confirm.cancelCallback();
 		}
 	}
-
-	private onKeyUp(e:KeyboardEvent):void {
-		if(this.hidden) return;
-		if(e.keyCode == 13 || e.keyCode == 32) {//Enter / space
-			this.answer(true);
-			e.preventDefault();
-			e.stopPropagation();
-		}
-		if(e.keyCode == 27) {//escape
-			this.answer(false);
-			e.preventDefault();
-			e.stopPropagation();
-		}
-	}
-
-	private answer(confirm:boolean):void {
-		if(!this.$store.state.confirm) return;
-		
-		if(confirm) {
-			if(this.$store.state.confirm.confirmCallback) {
-				this.$store.state.confirm.confirmCallback();
-			}
-		}else{
-			if(this.$store.state.confirm.cancelCallback) {
-				this.$store.state.confirm.cancelCallback();
-			}
-		}
-		this.$store.state.confirm = null;
-	}
+	storeMain.confirm = null;
 }
 </script>
 

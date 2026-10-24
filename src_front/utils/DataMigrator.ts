@@ -44,7 +44,8 @@ export default class DataMigrator {
 				if(data.daysDone[i] > 0) offset ++;
 			}
 		}
-		data.start = new Date();
-		(<Date>data.start).setDate(data.start.getDate() - offset);
+		let start = new Date();
+		start.setDate(start.getDate() - offset);
+		data.start = start.toISOString();
 	}
 }

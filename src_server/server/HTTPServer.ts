@@ -1,10 +1,8 @@
-import * as bodyParser from "body-parser";
 import * as http from "http";
 import Config from '../utils/Config';
 import Logger from '../utils/Logger';
-import * as historyApiFallback from 'connect-history-api-fallback';
-import * as express from "express";
-import { Express, NextFunction, Request, Response } from "express-serve-static-core";
+import historyApiFallback from 'connect-history-api-fallback';
+import express, { Express, NextFunction, Request, Response } from "express";
 
 export default class HTTPServer {
 	
@@ -41,10 +39,10 @@ export default class HTTPServer {
 		let staticHandler:any = express.static(Config.PUBLIC_PATH);
 		this.app.use(Config.SERVER_NAME+"/", staticHandler);//static files
 
-		this.app.use(<any>bodyParser.json({limit: '10mb'}));
-		this.app.use(<any>bodyParser.urlencoded({ extended: true }));
+		this.app.use(express.json({limit: '10mb'}));
+		this.app.use(express.urlencoded({ extended: true }));
 
-		this.app.all(Config.SERVER_NAME+"/*",  (req:Request, res:Response, next:NextFunction) => {
+		this.app.all(Config.SERVER_NAME+"/{*splat}",  (req:Request, res:Response, next:NextFunction) => {
 			//Static assets
 			res.header("Access-Control-Allow-Origin", "*");
 			next();

@@ -1,11 +1,8 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import Home from '@/views/Home.vue'
 import Calendar from '@/views/Calendar.vue'
 
-Vue.use(VueRouter)
-
-const routes = [
+const routes:RouteRecordRaw[] = [
 	{
 		path: '/',
 		name: 'home',
@@ -21,15 +18,14 @@ const routes = [
 		path: '/about',
 		name: 'about',
 		// route level code-splitting
-		// this generates a separate chunk (about.[hash].js) for this route
+		// this generates a separate chunk for this route
 		// which is lazy-loaded when the route is visited.
-		component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
+		component: () => import('../views/About.vue')
 	}
 ]
 
-const router = new VueRouter({
-	mode: 'history',
-	base: process.env.BASE_URL,
+const router = createRouter({
+	history: createWebHistory(import.meta.env.BASE_URL),
 	routes
 })
 

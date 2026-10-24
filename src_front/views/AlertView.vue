@@ -1,46 +1,49 @@
 <template>
-	<div class="alert" v-if="message && message.length > 0" @click="close()">
+	<div class="alert" v-if="message && message.length > 0" @click="close()" ref="rootEl">
 		<p v-html="message" class="label"></p>
 	</div>
 </template>
 
-<script lang="ts">
-import { Component, Inject, Model, Prop, Vue, Watch, Provide } from 'vue-property-decorator'
+<script setup lang="ts">
+import { nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
 import gsap from "gsap";
+import { storeMain as useStoreMain } from '@/store/main/storeMain';
 
-@Component
-export default class AlertView extends Vue {
+const storeMain = useStoreMain();
 
-	public message:string|null = "";
+const rootEl = useTemplateRef<HTMLDivElement>("rootEl");
 
-	public mounted():void {
-		if(this.$store.state.alert) {
-			this.onWatchAlert();
-		}
+const message = ref<string|null>("");
+
+onMounted(() => {
+	if(storeMain.alert) {
+		onWatchAlert();
 	}
+});
 
-	@Watch("$store.state.alert")
-	public onWatchAlert():void {
-		let mess = this.$store.state.alert;
-		if(mess && mess.length > 0) {
-			this.message = mess;
-			this.$nextTick().then(_=> {
-				this.$el.removeAttribute("style");
-				gsap.from(this.$el, {duration:.3, height:0, paddingTop:0, paddingBottom:0, ease:"back.out"});
-				setTimeout(_=> this.close(), 6000);
-			});
-		}else{
-			this.$nextTick().then(_=> {
-				gsap.to(this.$el, {duration:.3, height:0, paddingTop:0, paddingBottom:0, ease:"back.in", onComplete:()=> {
-					this.message = null;
-				}});
-			});
-		}
-	}
+watch(() => storeMain.alert, () => onWatchAlert());
 
-	public close():void {
-		this.$store.state.alert = null;
+function onWatchAlert():void {
+	let mess = storeMain.alert;
+	if(mess && mess.length > 0) {
+		message.value = mess;
+		nextTick().then(_=> {
+			rootEl.value!.removeAttribute("style");
+			gsap.from(rootEl.value!, {duration:.3, height:0, paddingTop:0, paddingBottom:0, ease:"back.out"});
+			setTimeout(_=> close(), 6000);
+		});
+	}else{
+		nextTick().then(_=> {
+			if(!rootEl.value) return;
+			gsap.to(rootEl.value, {duration:.3, height:0, paddingTop:0, paddingBottom:0, ease:"back.in", onComplete:()=> {
+				message.value = null;
+			}});
+		});
 	}
+}
+
+function close():void {
+	storeMain.alert = null;
 }
 </script>
 
