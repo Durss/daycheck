@@ -35,6 +35,13 @@ COPY --from=builder --chown=node:node /app/dist ./public
 # NB: no trailing newline — Config does an exact-string match on the env name
 RUN printf prod > env.conf
 
+# Calendars are stored as JSON files in /app/data. Mount a volume there
+# (see docker-compose.yml) so they survive image updates and container restarts.
+# The folder is created here so a fresh named volume inherits the "node" owner.
+ENV DATA_PATH=/app/data
+RUN mkdir -p /app/data && chown node:node /app/data
+VOLUME ["/app/data"]
+
 # Run as the unprivileged user shipped with the node image
 USER node
 

@@ -1,5 +1,5 @@
 export default class Config {
-	
-	public static DATA_VERSION:number = 2;
-	
+
+	public static DATA_VERSION:number = 3;
+
 }

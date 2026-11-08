@@ -53,6 +53,71 @@ export default class Config {
 	}
 
 	/**
+	 * Folder where calendars are stored as JSON files.
+	 * Mount it as a volume when running with docker.
+	 */
+	public static get DATA_PATH(): string {
+		return process.env.DATA_PATH || "./data";
+	}
+
+	/**
+	 * Maximum number of calendars stored on the server.
+	 * Creating new calendars is refused once reached.
+	 */
+	public static get MAX_CALENDARS(): number {
+		return this.envInt("MAX_CALENDARS", 10000);
+	}
+
+	/**
+	 * Maximum disk space used by calendars, in megabytes.
+	 */
+	public static get MAX_STORAGE_MB(): number {
+		return this.envInt("MAX_STORAGE_MB", 200);
+	}
+
+	/**
+	 * Calendars that haven't been modified for this number of days are deleted.
+	 * 0 disables the purge.
+	 */
+	public static get PURGE_AFTER_DAYS(): number {
+		const value = parseInt(process.env.PURGE_AFTER_DAYS);
+		return isNaN(value) || value < 0? 365 : value;
+	}
+
+	/** Delay between two purges of abandoned calendars */
+	public static readonly PURGE_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+	/**
+	 * Express "trust proxy" setting, needed to get the real client IP
+	 * (used for rate limiting) when running behind a reverse proxy.
+	 * Set TRUST_PROXY=1 if exactly one proxy (nginx, traefik, caddy...) sits in front of the app.
+	 * Leave it unset if clients reach the app directly, otherwise they can spoof their IP.
+	 * @see https://expressjs.com/en/guide/behind-proxies.html
+	 */
+	public static get TRUST_PROXY(): boolean|number|string {
+		const value = (process.env.TRUST_PROXY || "").trim();
+		if(value == "" || value == "false") return false;
+		if(value == "true") return true;
+		if(/^\d+$/.test(value)) return parseInt(value);
+		return value;
+	}
+
+	/** Maximum size of a calendar sent to the API */
+	public static readonly MAX_BODY_SIZE = "64kb";
+
+	/** Rate limits, per client IP */
+	public static readonly RATE_LIMITS = {
+		read:	{max:300, windowMs: 60 * 1000},
+		write:	{max:120, windowMs: 60 * 1000},
+		create:	{max:30, windowMs: 60 * 60 * 1000},
+	};
+
+	private static envInt(name:string, fallback:number):number {
+		const value = parseInt(process.env[name]);
+		return isNaN(value) || value <= 0? fallback : value;
+	}
+
+	/**
 	 * Extract a data from an hasmap depending on the current environment.
 	 * @param map
 	 * @returns {any}

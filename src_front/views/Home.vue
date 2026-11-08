@@ -10,17 +10,21 @@
 			<form @submit.prevent="onSubmit()">
 				<div class="formLine">
 					<label for="name" data-tooltip="Name your calendar, in case you forgot the thing you wanted to do...">Task name <sup>*</sup></label>
-					<input type="text" id="name" v-model="name" placeholder="name">
+					<input type="text" id="name" v-model="name" placeholder="name" :maxlength="CALENDAR_LIMITS.name">
 				</div>
 				<div class="formLine">
-					<label for="days" data-tooltip="Number of days you want to do your thing">Number of days *</label>
-					<input type="number" min="1" max="365" id="days" v-model="days">
+					<label for="days" data-tooltip="Number of days you want to do your thing, or endless to keep going with no end date">Duration *</label>
+					<div class="duration">
+						<button type="button" :class="{selected:!endless}" @click="endless = false">Days</button>
+						<button type="button" :class="{selected:endless}" @click="endless = true">Endless ∞</button>
+					</div>
+					<input type="number" min="1" max="365" id="days" v-model="days" v-if="!endless">
 				</div>
 				<div class="formLine">
 					<label for="description" data-tooltip="Add a description if you want to be sure you remember the thing you want to do every day" @click="openDescription = !openDescription" class="description">{{"Task description "+(openDescription? "▼" : "►")}}</label>
-					<textarea type="text" id="description" v-model="description" placeholder="description" v-if="openDescription"></textarea>
+					<textarea type="text" id="description" v-model="description" placeholder="description" v-if="openDescription" :maxlength="CALENDAR_LIMITS.description"></textarea>
 				</div>
-				<Button type="submit" title="Create" :loading="loading" class="submit" :disabled="name==null || name.length == 0" />
+				<Button type="submit" title="Create" :loading="loading" class="submit" :disabled="!canSubmit" />
 				<div class="small">* : mandatory</div>
 			</form>
 		</div>
@@ -31,6 +35,7 @@
 import { computed, ref } from "vue";
 import Button from '../components/Button.vue';
 import { storeMain as useStoreMain } from '@/store/main/storeMain';
+import { CALENDAR_LIMITS } from '@/vo/CalendarData';
 
 const storeMain = useStoreMain();
 
@@ -39,6 +44,13 @@ const openDescription = ref<boolean>(false);
 const name = ref<string>("");
 const description = ref<string>("");
 const days = ref<number>(30);
+const endless = ref<boolean>(false);
+
+const canSubmit = computed<boolean>(() => {
+	if(!name.value) return false;
+	//Force parsing as int. For some reason if user write manually in the field, the var type becomes a string...
+	return endless.value || parseInt(<any>days.value) >= 1;
+});
 
 const classes = computed<string[]>(() => {
 	let res = ["home", "frame"];
@@ -46,9 +58,10 @@ const classes = computed<string[]>(() => {
 });
 
 function onSubmit():void {
+	if(!canSubmit.value) return;
 	storeMain.createCalendar({
 		name:name.value,
-		days:parseInt(<any>days.value),//Force parsing as int. For some reason if user write manually in the field, the var type becomes a string...
+		days:endless.value? null : parseInt(<any>days.value),
 		description:description.value,
 	})
 }
@@ -79,6 +92,30 @@ function onSubmit():void {
 		.formLine {
 			.description {
 				cursor: pointer;
+			}
+
+			.duration {
+				display: flex;
+				flex-direction: row;
+				margin-top: 5px;
+				button {
+					flex: 1;
+					border-radius: 0;
+					color: @mainColor_dark;
+					background-color: @mainColor_light_light;
+					&:first-child {
+						border-top-left-radius: 20px;
+						border-bottom-left-radius: 20px;
+					}
+					&:last-child {
+						border-top-right-radius: 20px;
+						border-bottom-right-radius: 20px;
+					}
+					&.selected {
+						color: #fff;
+						background-color: @mainColor_normal;
+					}
+				}
 			}
 		}
 	}

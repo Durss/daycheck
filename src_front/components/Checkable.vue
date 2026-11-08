@@ -1,103 +1,65 @@
 <template>
-	<div :class="classes" @click="onClick" :data-tooltip="tooltip">
+	<div :class="classes" @click="onClick" :data-tooltip="props.tooltip">
 		<div class="inner">
-			<span v-if="value==0">{{props.index+1}}</span>
+			<span v-if="value==0">{{dayOfMonth}}</span>
 			<img src="@/assets/icons/checkmark.svg" alt="check" v-if="value>0" class="checkmark">
 			<div class="steps" v-if="value>0">
-				<img src="@/assets/icons/star.svg" alt="check" v-if="value>0" class="star">
-				<img src="@/assets/icons/star.svg" alt="check" v-if="value>1" class="star">
-				<img src="@/assets/icons/star.svg" alt="check" v-if="value>2" class="star">
-				<img src="@/assets/icons/star.svg" alt="check" v-if="value>3" class="star">
-				<img src="@/assets/icons/star.svg" alt="check" v-if="value>4" class="star">
+				<img src="@/assets/icons/star.svg" alt="star" v-for="i in value" :key="i" class="star">
 			</div>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, onBeforeUnmount, ref } from "vue";
+import { computed } from "vue";
 
-const props = defineProps<{
-	data:number[];
-	startDate:string;
-	index:number;
-}>();
+const props = withDefaults(defineProps<{
+	/** Day represented by this cell ("YYYY-MM-DD") */
+	date:string;
+	/** Check level, 0 to 5 */
+	value:number;
+	today?:boolean;
+	/** Is this day part of a run */
+	active?:boolean;
+	clickable?:boolean;
+	tooltip?:string;
+}>(), {
+	today: false,
+	active: false,
+	clickable: false,
+	tooltip: "",
+});
 
 const emit = defineEmits<{
-	click: [index:number];
+	click: [date:string];
 }>();
 
-let timeoutRefresh:ReturnType<typeof setTimeout> = null;
-const today = ref<Date>(null);
-
-const date = computed<Date>(() => {
-	let d = new Date(props.startDate);
-	d.setDate(d.getDate() + props.index);
-	return d;
-});
-
-const isToday = computed<boolean>(() => {
-	return date.value.getDate() == today.value.getDate()
-	&& date.value.getMonth() == today.value.getMonth()
-	&& date.value.getFullYear() == today.value.getFullYear();
-});
-
-const isFuture = computed<boolean>(() => {
-	return !isToday.value;
-});
-
-const tooltip = computed<string>(() => {
-	if(isToday.value) return "Today";
-	return "";
-});
-
-const value = computed<number>(() => {
-	let daysDone = props.data;
-	return daysDone && daysDone[props.index]? daysDone[props.index] : 0;
-});
+const dayOfMonth = computed<number>(() => parseInt(props.date.split("-")[2]));
 
 const classes = computed<string[]>(() => {
 	let res = ["checkable"];
-	if(value.value>0) res.push("selected");
-	if(isToday.value) res.push("today");
-	if(isFuture.value) res.push("future");
-	if(value.value>0) res.push("size"+value.value);
+	if(props.value>0) res.push("selected", "size"+props.value);
+	if(props.today) res.push("today");
+	if(!props.clickable) res.push("locked");
+	if(!props.active) res.push("off");
 	return res;
 });
 
-onBeforeMount(() => {
-	scheduleRefresh();
-});
-
-onBeforeUnmount(() => {
-	clearTimeout(timeoutRefresh);
-});
-
 function onClick():void {
-	emit("click", props.index);
-}
-
-function scheduleRefresh():void {
-	today.value = new Date();
-	let tomorrow = new Date();
-	tomorrow.setHours(tomorrow.getHours()+24);
-	tomorrow.setHours(0);
-	tomorrow.setMinutes(0);
-	tomorrow.setSeconds(0);
-	timeoutRefresh = setTimeout(scheduleRefresh,  tomorrow.getTime() - today.value.getTime() + 1000);//add 1sec for safety
+	if(!props.clickable) return;
+	emit("click", props.date);
 }
 </script>
 
 <style scoped lang="less">
 .checkable{
-	width: 100%;
-	height: 100%;
 	z-index: 1;
 	position: relative;
 	user-select: none;
-	width: 94px;
-	height: 94px;
+	aspect-ratio: 1;
+	min-width: 0;
 	padding: 3px;
+	box-sizing: border-box;
 	background-color: #fff;
 
 	.inner {
@@ -111,7 +73,8 @@ function scheduleRefresh():void {
 		align-items: center;
 		box-sizing: border-box;
 		color: @mainColor_normal_light;
-		font-size: 40px;
+		//Scales with the calendar grid width (container defined by parent)
+		font-size: clamp(14px, 6cqi, 36px);
 		font-family: "FuturaLight";
 		transition: .25s all;
 		background-color: #fff;
@@ -129,9 +92,8 @@ function scheduleRefresh():void {
 			flex-direction: row;
 			justify-content: center;
 			width: 100%;
-			height: 10px;
 			.star {
-				width: 10px;
+				width: clamp(4px, 1.6cqi, 10px);
 			}
 		}
 	}
@@ -191,13 +153,25 @@ function scheduleRefresh():void {
 
 	&.today {
 		.inner {
-			border-width: 5px;
+			border-width: clamp(3px, .8cqi, 5px);
 		}
 	}
 
-	&.future {
+	&.locked {
 		filter: saturate(60%);
-		pointer-events: none;
+		.inner {
+			cursor: default;
+		}
+		&:hover .inner {
+			transform: none;
+		}
+	}
+
+	&.off:not(.selected) {
+		.inner {
+			border-color: @mainColor_normal_extralight;
+			color: @mainColor_normal_extralight;
+		}
 	}
 }
 </style>

@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently --kill-others \"npm run front/serve\" \"npm run server/watch\"",
+    "dev": "npm run server/build && concurrently --kill-others --names front,tsc,api \"npm run front/serve\" \"npm run server/watch\" \"npm run server/serve\"",
     "build": "npm run front/build && npm run server/build",
     "front/serve": "vite",
     "front/build": "vue-tsc --noEmit && vite build",
-    "server/watch": "tsc -w -p ./tsconfig_server.json",
+    "server/watch": "tsc -w --preserveWatchOutput -p ./tsconfig_server.json",
+    "server/serve": "node --watch server/bootstrap.js",
     "server/build": "tsc -p ./tsconfig_server.json"
   },
   "dependencies": {
