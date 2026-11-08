@@ -35,6 +35,7 @@ export default class CalendarStorage {
 	 */
 	public async init():Promise<void> {
 		await fs.promises.mkdir(this.dir, {recursive:true});
+		await this.checkWritable();
 		const files = await fs.promises.readdir(this.dir);
 		for (const file of files) {
 			const match = file.match(CalendarStorage.FILE_REGEX);
@@ -50,7 +51,25 @@ export default class CalendarStorage {
 		Logger.info(this.entries.size+" calendar(s) found in \""+path.resolve(this.dir)+"\" ("+(this.totalBytes/1024).toFixed(1)+" KB)");
 	}
 
-	public static isValidId(id:string):boolean {
+	/**
+	 * Makes sure calendars can be written, to fail at startup with a clear
+	 * message rather than on every save (typically a docker bind mount owned by root)
+	 */
+	private async checkWritable():Promise<void> {
+		const probe = path.join(this.dir, ".write-test-"+crypto.randomBytes(6).toString("hex")+".tmp");
+		try {
+			await fs.promises.writeFile(probe, "");
+			await fs.promises.unlink(probe);
+		}catch(error:any) {
+			const uid = typeof process.getuid == "function"? process.getuid() : "?";
+			const gid = typeof process.getgid == "function"? process.getgid() : "?";
+			throw new Error("Calendars folder \""+path.resolve(this.dir)+"\" isn't writable by the server (uid "+uid+")."
+				+" If it's a docker bind mount, give it to that user on the host, eg: sudo chown -R "+uid+":"+gid+" calendars (from the folder containing docker-compose.yml)"
+				+" ("+error.code+")");
+		}
+	}
+
+		public static isValidId(id:string):boolean {
 		return typeof id == "string" && CalendarStorage.ID_REGEX.test(id);
 	}
 

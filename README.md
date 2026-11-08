@@ -69,12 +69,12 @@ pm2 start bootstrap-pm2.json
 A multi-stage `Dockerfile` builds the frontend and the server, then ships only the
 production dependencies and the compiled output. The app is served on port `3003`.
 
-Calendars are stored in `/app/data` inside the container: **always mount a volume there**, otherwise they're lost when the container is recreated (eg: on update).
+Calendars are stored in `/app/data` inside the container. Docker Compose maps it to the `calendars` folder next to `docker-compose.yml` (configurable with `CALENDARS_PATH` in `.env`), so they survive updates and can be read directly from the host (FTP, backups...). Files are owned by uid `1000` and readable by everyone.
 
-First, create the volume once :
+First, create the folder once and make it writable by the container user (uid `1000`). The server refuses to start otherwise :
 
 ```
-docker volume create daycheck-data
+mkdir -p calendars && sudo chown 1000:1000 calendars
 ```
 
 To change settings (see environment variables above), create a `.env` file next to `docker-compose.yml`, docker compose reads it automatically. Start from the example and only keep the lines you want to change :
@@ -84,40 +84,47 @@ cp .env.example .env
 nano .env
 ```
 
-This file isn't versioned so it's kept when pulling updates. After editing it, run `docker compose up -d` again to apply the changes.  
-With plain `docker run`, pass settings with `-e`, eg: `-e TRUST_PROXY=1`.
+This file isn't versioned so it's kept when pulling updates. After editing it, run `docker compose up -d` again to apply the changes.
 
-Then build and run with Docker :
-
-```
-docker build -t daycheck .
-docker run -d -p 3003:3003 -v daycheck-data:/app/data --name daycheck daycheck
-```
-
-Or with Docker Compose (the volume is declared as external so compose never deletes it, not even with `docker compose down -v`) :
+Then build and run with Docker Compose :
 
 ```
 docker compose up -d --build
 ```
 
-To update, rebuild and restart, the calendars stay in the volume :
+Or with plain Docker (pass settings with `-e`, eg: `-e TRUST_PROXY=1`) :
+
+```
+docker build -t daycheck .
+docker run -d -p 3003:3003 -v "$PWD/calendars":/app/data --name daycheck daycheck
+```
+
+To update, rebuild and restart, the calendars stay in the folder :
 
 ```
 git pull
 docker compose up -d --build
 ```
 
-To backup calendars, copy the volume's content :
+To backup calendars, archive the folder (`tar` keeps files dates, used to delete calendars unchanged for a year) :
 
 ```
-docker run --rm -v daycheck-data:/data -v "$PWD":/backup alpine tar czf /backup/daycheck-data.tgz -C /data .
+tar czf daycheck-calendars.tgz -C calendars .
 ```
 
-If you prefer a host folder instead of a docker volume (bind mount), make sure it's writable by the container user (uid `1000`) :
+The folder is meant to be read only from outside: calendars added or modified by hand are only taken into account after restarting the container.  
+Don't run `git clean -x` as it deletes ignored files, including this folder.
+
+### Migrating from the `daycheck-data` docker volume
+Previous versions stored calendars in a docker volume named `daycheck-data`. To move them to the `calendars` folder, keeping files owners and dates :
 
 ```
-mkdir -p ./data && sudo chown 1000:1000 ./data
-docker run -d -p 3003:3003 -v "$PWD/data":/app/data --name daycheck daycheck
+docker compose down
+mkdir -p calendars && sudo chown 1000:1000 calendars
+docker run --rm -v daycheck-data:/from -v "$PWD/calendars":/to alpine cp -a /from/. /to/
+docker compose up -d --build
 ```
+
+Once you checked everything is fine, delete the volume with `docker volume rm daycheck-data`.
 
 Then open http://localhost:3003

@@ -26,3 +26,6 @@ yarn-error.log*
 
 # Server settings (see .env.example)
 .env
+
+# Calendars storage (docker bind mount)
+/calendars

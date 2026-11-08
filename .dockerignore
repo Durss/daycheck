@@ -26,3 +26,6 @@ data
 
 # Server settings, never bake them into the image
 .env
+
+# Calendars storage (docker bind mount), never send it to the build context
+calendars

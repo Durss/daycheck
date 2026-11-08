@@ -7,8 +7,11 @@ services:
       - "3003:3003"
     restart: unless-stopped
     volumes:
-      # Calendars storage (JSON files), kept across image updates and restarts
-      - daycheck-data:/app/data
+      # Calendars storage (one JSON file per calendar), on the host so they survive
+      # image updates and can be read directly (FTP, backups...).
+      # Defaults to the "calendars" folder next to this file. It must be writable by uid 1000:
+      #   mkdir -p calendars && sudo chown 1000:1000 calendars
+      - ${CALENDARS_PATH:-./calendars}:/app/data
     # Settings are read from a ".env" file next to this one (see .env.example),
     # values after ":-" are the defaults used when a variable isn't set
     environment:
@@ -16,10 +19,3 @@ services:
       MAX_CALENDARS: ${MAX_CALENDARS:-10000}
       MAX_STORAGE_MB: ${MAX_STORAGE_MB:-200}
       PURGE_AFTER_DAYS: ${PURGE_AFTER_DAYS:-365}
-
-volumes:
-  # External volume: never created nor deleted by docker compose (not even with `down -v`)
-  # Create it once with: docker volume create daycheck-data
-  daycheck-data:
-    external: true
-    name: daycheck-data
