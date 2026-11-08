@@ -9,16 +9,13 @@ services:
     volumes:
       # Calendars storage (JSON files), kept across image updates and restarts
       - daycheck-data:/app/data
+    # Settings are read from a ".env" file next to this one (see .env.example),
+    # values after ":-" are the defaults used when a variable isn't set
     environment:
-      # Set to 1 if the app runs behind ONE reverse proxy (nginx, traefik, caddy...)
-      # so that rate limiting sees the real client IPs.
-      # Leave empty if clients reach the app directly, otherwise they could spoof their IP.
-      TRUST_PROXY: ""
-      # Storage quotas: creating new calendars is refused once reached
-      MAX_CALENDARS: 10000
-      MAX_STORAGE_MB: 200
-      # Calendars not modified for this number of days are deleted (0 to disable)
-      PURGE_AFTER_DAYS: 365
+      TRUST_PROXY: ${TRUST_PROXY:-}
+      MAX_CALENDARS: ${MAX_CALENDARS:-10000}
+      MAX_STORAGE_MB: ${MAX_STORAGE_MB:-200}
+      PURGE_AFTER_DAYS: ${PURGE_AFTER_DAYS:-365}
 
 volumes:
   # External volume: never created nor deleted by docker compose (not even with `down -v`)

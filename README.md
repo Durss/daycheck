@@ -77,6 +77,16 @@ First, create the volume once :
 docker volume create daycheck-data
 ```
 
+To change settings (see environment variables above), create a `.env` file next to `docker-compose.yml`, docker compose reads it automatically. Start from the example and only keep the lines you want to change :
+
+```
+cp .env.example .env
+nano .env
+```
+
+This file isn't versioned so it's kept when pulling updates. After editing it, run `docker compose up -d` again to apply the changes.  
+With plain `docker run`, pass settings with `-e`, eg: `-e TRUST_PROXY=1`.
+
 Then build and run with Docker :
 
 ```

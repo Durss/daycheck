@@ -23,3 +23,6 @@ yarn-error.log*
 
 # Calendars storage (server)
 data
+
+# Server settings, never bake them into the image
+.env
